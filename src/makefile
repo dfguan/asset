@@ -3,7 +3,7 @@ CFLAGS  =  -g -Wall -D VERBOSE -O2 -D PRINT_COVERAGE
 LDFLAGS = -lz -lm
 
 #OBJS = gfa.o opt.o paf.o sdict.o eg.o 
-PROG = ast_pb ast_10x ast_bion acc  pchlst detgaps ast_hic2 col_conts union_brks ast_bion_bnx split_fa 10x # ast_postproc
+PROG = ast_pb ast_10x ast_bion acc  pchlst detgaps ast_hic2 col_conts union_brks ast_bion_bnx split_fa 10x union # ast_postproc
 
 .SUFFIXS:.c .o
 
@@ -66,8 +66,8 @@ acc: acc.o sdict.o bed.o ast.o
 #join:joinh.o sdict.o bamlite.o 
 	#$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-#union:union_beds.o sdict.o bed.o ast.o 
-	#$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+union:union_beds.o sdict.o bed.o ast.o 
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 union_brks:union_brks.o sdict.o bed.o ast.o 
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
