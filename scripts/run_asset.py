@@ -464,18 +464,18 @@ def acc(man, ref, out_dir, bin_dir, spid):
         # rtn = man.start([j])
         # if rtn:
             # return 
-    beds = []
-    for fn in ["gaps.bed", "10x.bed", "bn.bed", "hic.bed", "pb.bed"]:
-        fpath = "{0}/{1}".format(out_dir,fn)
-        if checkf(fpath):
-            beds.append(fpath)
-    if len(beds):
-        jcmd = "{0}/acc {1} > {2}/acc.bed".format(bin_dir, " ".join(beds), out_dir) 
-        jjn = "acc_{}".format(spid)
-        jout = "{0}/acc_{1}.o".format(out_dir, spid)
-        jerr = "{0}/acc_{1}.e".format(out_dir, spid)
-        j = hpc("lsf", cmd=jcmd, core=1, mem = 20000, jn=jjn, out=jout, err=jerr)
-        man.start([j], True)
+    # beds = []
+    # for fn in ["gaps.bed", "10x.bed", "bn.bed", "hic.bed", "pb.bed"]:
+        # fpath = "{0}/{1}".format(out_dir,fn)
+        # if checkf(fpath):
+            # beds.append(fpath)
+    # if len(beds):
+        # jcmd = "{0}/acc {1} > {2}/acc.bed".format(bin_dir, " ".join(beds), out_dir) 
+        # jjn = "acc_{}".format(spid)
+        # jout = "{0}/acc_{1}.o".format(out_dir, spid)
+        # jerr = "{0}/acc_{1}.e".format(out_dir, spid)
+        # j = hpc("lsf", cmd=jcmd, core=1, mem = 20000, jn=jjn, out=jout, err=jerr)
+        # man.start([j], True)
     #acc contig
     
     jcmd = "{0}/acc {2}/gaps.bed {2}/pb.bed {2}/bn.bed > {2}/pb_bn.bed".format(bin_dir, " ".join(beds), out_dir) 

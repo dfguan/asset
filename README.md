@@ -111,50 +111,25 @@ do
 	prefix=`basename $r1 .fastq.gz`
 	bwa mem -SP -B10 -t12 $asm $prefix_1.fq.gz $prefix_2.fq.gz | samtools view -b - > $prefix.bam
 done < $10xlist
-
-bin/ast_hic $output_dir/gaps.bed $bam1 $bam2 $bam3 ... >$output_dir/hic.bed 2>ast_hic.log
+bin/col_conts *.bam > $output_dir/links.mat
+bin/ast_hic $asm.fai $output_dir/links.mat >$output_dir/hic2.bed 2>ast_hic.log
 
 ```
 
-## Evidence Accumulation
+## Evidence Accumulation 
 once you got the bed files from Pacbio (pb.bed), 10X (10x.bed), Bionano (bn.bed), HiC (hic.bed), run the following command to get accumulation bed file and detect break points.
 
 ```
-samtools faidx $asm
-bin/acc $output_dir/gaps.bed $output_dir/{pb.bed,10x.bed,hic.bed,bn.bed} > acc.bed 2> acc.log
-bin/pchlst $output_dir/gaps.bed acc.bed > pchlist.bed 2>pchlst.log
+bin/acc $output_dir/gaps.bed $output_dir/{pb,bn}.bed $output_dir/bn.bed > $output_dir/pb_bn.bed 
+bin/acc $output_dir/gaps.bed $output_dir/{10x,hic2,bn}.bed > $output_dir/10x_hic2_bn.bed  
 ```
 
-## Assembly Statistics
-
+## Mis-assemblies Detection
 ```
-python3 scripts/ast_stat.py $output_dir/acc.bed 
-```
-Finally you will get output like this:
-
-```
-assembly scores:
-absolute assembly score: 3.79     
-relative assembly score: 0.95 
-
-support technology distribution (%) [0-4 techs]: 0.35 0.80 1.77 13.21 83.87
-Fraction of Non-Ns in support technology distribution (%) [0-4 techs]: 7.66 15.43 46.59 97.80 100.00
-
-reliable blocks statistics [>=2 techs]:
-sum: 585120528, largest: 21565065, average: 1354445.67
-N50: 11828597, L50: 18
-N60: 10406847, L60: 23
-N70: 8590836, L70: 29
-N80: 5534544, L80: 37
-N90: 1978425, L90: 56
-N100: 4, L100: 431
-reliable blocks statistics [>=2 techs] (gaps excluded):
-sum: 577813644, largest: 21052119, average: 1337531.58
-N50: 11655209, L50: 18
-N60: 10406847, L60: 23
-N70: 8579444, L70: 29
-N80: 5534519, L80: 37
-N90: 1978425, L90: 56
-N100: 4, L100: 431
+bin/pchlst -c $output_dir/gaps.bed $output_dir/pb_bn.bed > $output_dir/pchlst_ctg.bed
+bin/pchlst $output_dir/gaps.bed $output_dir/10x_hic2_bn.bed > $output_dir/pchlst_scaf.bed 
+bin/union_brks -x $output_dir/gaps.bed $output_dir/pchlst_{ctg,scaf}.bed > $output_dir/pchlst_final.bed
 ```
 
+## Contact
+Wellcome to use, you can use github webpage to report an issue or email me dfguan9@gmail.com with any advice.
