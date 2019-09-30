@@ -117,9 +117,9 @@ def aln_10x(p):
     
 
 def trim_aln_10x(p):
-    [man, ref, fns, core_lim, mem_lim, queue, out_fn, skip_trim] = p
+    [man, bin_dir, ref, fns, core_lim, mem_lim, queue, out_fn, skip_trim] = p
     out_dir = getd(out_fn)
-    
+     
     [r1, r2] = fns.split('\t')
     
     pref = getfn(r1).split(".")[0]
@@ -127,7 +127,8 @@ def trim_aln_10x(p):
     jobs = []
     rtn = 0
     if skip_trim != 1:
-        jcmd = " ".join(['10x', '-p', pref, '-o', out_dir, '-c', r1, r2])
+        # jcmd = " ".join(['10x', '-p', pref, '-o', out_dir, '-c', r1, r2])
+        jcmd = "{0}/10x -p {1} -o {2} -c {3} {4}".format(bin_dir, pref, out_dir, r1, r2)
         jjn = "10x_trim"
         jout = "{0}/{1}.o".format(out_dir, jjn)
         jerr = "{0}/{1}.e".format(out_dir, jjn)
@@ -167,7 +168,7 @@ def assess_10x(man, ref, fofn, core_lim, mem_lim, queue, out_dir, bin_dir, spid,
         f.close()
   
     for i in range(len(in_fns)):
-        params.append([man, ref, in_fns[i], core_lim, mem_lim, queue, out_fns[i], skip_trim])
+        params.append([man, bin_dir, ref, in_fns[i], core_lim, mem_lim, queue, out_fns[i], skip_trim])
     
     procs = []
     pl = Pool(processes=len(in_fns))
