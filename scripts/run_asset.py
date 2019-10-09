@@ -127,8 +127,8 @@ def trim_aln_10x(p):
     jobs = []
     rtn = 0
     if skip_trim != 1:
-        # jcmd = " ".join(['10x', '-p', pref, '-o', out_dir, '-c', r1, r2])
-        jcmd = "{0}/10x -p {1} -o {2} -c {3} {4}".format(bin_dir, pref, out_dir, r1, r2)
+        jcmd = " ".join(['10x', '-p', pref, '-o', out_dir, '-c', r1, r2])
+        # jcmd = "{0}/10x -p {1} -o {2} -c {3} {4}".format(bin_dir, pref, out_dir, r1, r2)
         jjn = "10x_trim"
         jout = "{0}/{1}.o".format(out_dir, jjn)
         jerr = "{0}/{1}.e".format(out_dir, jjn)
@@ -288,8 +288,11 @@ def assess_hic(man, ref, fofn, core_lim, mem_lim, queue, out_dir, bin_dir, spid,
 
 def assess_10x_hic(man, ref, fofn, core_lim, mem_lim, queue, out_dir, bin_dir, spid, skip_trim, skip_10x, skip_hic):
     # p = Process(target=bwa_index, args=(man, ref, out_dir, spid, rtn)) 
-    pl = Pool(processes=1)
-    rtvs = pl.map(bwa_index, [[man,ref, out_dir, spid]])
+    if skip_10x and skip_hic:
+        rtvs = [0]
+    else:
+        pl = Pool(processes=1)
+        rtvs = pl.map(bwa_index, [[man,ref, out_dir, spid]])
     procs = []
     if rtvs[0] == 0:
         p = Process(target=assess_10x, args=(man, ref, fofn[0], core_lim, mem_lim, queue, out_dir, bin_dir, spid, skip_trim, skip_10x))
@@ -464,18 +467,18 @@ def acc(man, ref, out_dir, bin_dir, spid):
         # rtn = man.start([j])
         # if rtn:
             # return 
-    beds = []
-    for fn in ["gaps.bed", "10x.bed", "bn.bed", "hic.bed", "pb.bed"]:
-        fpath = "{0}/{1}".format(out_dir,fn)
-        if checkf(fpath):
-            beds.append(fpath)
-    if len(beds):
-        jcmd = "{0}/acc {1} > {2}/acc.bed".format(bin_dir, " ".join(beds), out_dir) 
-        jjn = "acc_{}".format(spid)
-        jout = "{0}/acc_{1}.o".format(out_dir, spid)
-        jerr = "{0}/acc_{1}.e".format(out_dir, spid)
-        j = hpc("lsf", cmd=jcmd, core=1, mem = 20000, jn=jjn, out=jout, err=jerr)
-        man.start([j], True)
+    # beds = []
+    # for fn in ["gaps.bed", "10x.bed", "bn.bed", "hic.bed", "pb.bed"]:
+        # fpath = "{0}/{1}".format(out_dir,fn)
+        # if checkf(fpath):
+            # beds.append(fpath)
+    # if len(beds):
+        # jcmd = "{0}/acc {1} > {2}/acc.bed".format(bin_dir, " ".join(beds), out_dir) 
+        # jjn = "acc_{}".format(spid)
+        # jout = "{0}/acc_{1}.o".format(out_dir, spid)
+        # jerr = "{0}/acc_{1}.e".format(out_dir, spid)
+        # j = hpc("lsf", cmd=jcmd, core=1, mem = 20000, jn=jjn, out=jout, err=jerr)
+        # man.start([j], True)
     #acc contig
     
     jcmd = "{0}/acc {2}/gaps.bed {2}/pb.bed {2}/bn.bed > {2}/pb_bn.bed".format(bin_dir, " ".join(beds), out_dir) 
@@ -524,7 +527,7 @@ def punchlist(man, ref, out_dir, bin_dir, spid):
     scf_pchlst = "{}/pchlst_scaf.bed".format(out_dir)
     if checkf(scaf_acc) and checkf(contig_acc):
         faidx_fn = "{}.fai".format(ref)
-        jcmd = "{0}/union_brks -x {1}/gaps.bed {2} {3} > {1}/pchlst_chrom.bed".format(bin_dir, out_dir, ctg_pchlst, scf_pchlst) 
+        jcmd = "{0}/union_brks -x 1000 {1}/gaps.bed {2} {3} > {1}/pchlst_chrom.bed".format(bin_dir, out_dir, ctg_pchlst, scf_pchlst) 
         jjn = "pchlst_chrom_{}".format(spid)
         jout = "{0}/pchlst_chrom_{1}.o".format(out_dir, spid)
         jerr = "{0}/pchlst_chrom_{1}.e".format(out_dir, spid)

@@ -189,8 +189,8 @@ int col_enzcuts(hit_ary_t *hit_ary, sdict_t *sd)
     for (i = 0; i <= sd->n_seq; ++i) 
        tmp = idxs[i], idxs[i] = sum, sum += tmp; 
     
-    for (i = 0; i <= sd->n_seq; ++i) 
-        fprintf(stderr, "%u\n", idxs[i]); 
+    /*for (i = 0; i <= sd->n_seq; ++i) */
+        /*fprintf(stderr, "%u\n", idxs[i]); */
     hit_t *hs = hit_ary->ary;
 	size_t n = hit_ary->n;
     
@@ -247,7 +247,7 @@ int col_contacts(hit_ary_t *hit_ary, sdict_t *sd, cdict_t *cs)
 			if (is_l1 > 1) return 1; //middle won't be added
 			uint32_t is_l2 = check_left_half(use_sd->seq[ind2].le, use_sd->seq[ind2].rs, a1s);
 			if (is_l2 > 1) return 1; //middle won't be added
-			fprintf(stderr, "%s\t%u\t%s\t%u\n", sd->seq[ind1].name, a0s, sd->seq[ind2].name, a1s);
+			/*fprintf(stderr, "%s\t%u\t%s\t%u\n", sd->seq[ind1].name, a0s, sd->seq[ind2].name, a1s);*/
 			cd_add(&cs[ind1<<1|is_l1], use_sd->seq[ind2].name, is_l2, is_l2?use_sd->seq[ind2].l_snp_n:use_sd->seq[ind2].r_snp_n);		
 			cd_add(&cs[ind2<<1|is_l2], use_sd->seq[ind1].name, is_l1, is_l1?use_sd->seq[ind1].l_snp_n:use_sd->seq[ind1].r_snp_n);		
 			
@@ -313,6 +313,7 @@ int col_hits(aln_inf_t *a, int a_cnt, aln_inf_t *f, int f_cnt, sdict_t *ctgs, sd
 		if (a_cnt == 2) {
 			uint32_t ind1 = a[0].tid; //maybe not well paired up
 			uint32_t ind2 = a[1].tid;
+			/*fprintf(stderr, "A\t%s\t%u\t%d\t%s\t%u\t%d\n", ctgs->seq[ind1].name, a[0].s, a[0].rev, ctgs->seq[ind2].name, a[1].s, a[1].rev);*/
 			if (ind1 == ind2) return 1;
 			/*fprintf(stderr, "%u\t%u\n", ind1, ind2);*/
 			/*fprintf(stderr, "%s\t%s\n", r->ctgn1, r->ctgn2)	;*/
@@ -336,6 +337,7 @@ int col_hits(aln_inf_t *a, int a_cnt, aln_inf_t *f, int f_cnt, sdict_t *ctgs, sd
 		} else if (f_cnt == 2){
 			uint32_t ind1 = f[0].tid;
 			uint32_t ind2 = f[1].tid;
+			/*fprintf(stderr, "A\t%s\t%u\t%d\t%s\t%u\t%d\n", ctgs->seq[ind1].name, f[0].s, f[0].rev, ctgs->seq[ind2].name, f[1].s, f[1].rev);*/
 			if (ind1 == ind2) return 1;
 			/*fprintf(stderr, "%s\t%s\n", r->ctgn1, r->ctgn2)	;*/
 			if (ind1 < ind2) {
@@ -421,8 +423,9 @@ int proc_bam(char *bam_fn, int min_mq, sdict_t *ctgs, sdict_t *scfs, hit_ary_t *
 				/*is_set = 0;*/
 				kv_reset(all);
 				kv_reset(five);
-				if (cur_qn) ++rdp_counter, free(cur_qn); 
+				if (cur_qn) free(cur_qn); 
 				cur_qn = strdup(bam1_qname(b));
+				++rdp_counter; 
 			}
 			if (b->core.flag & 0x4 || b->core.qual < min_mq) continue; //not aligned
 			aln_inf_t tmp;
@@ -545,13 +548,13 @@ int col_hic_lnks(char *sat_fn, char **bam_fn, int n_bam, int min_mq, uint32_t wi
 	qsort(hit_ary->ary, hit_ary->n, sizeof(hit_t), cmp_hits);	
 	//col joints
     col_enzcuts(hit_ary, ctgs);
-	fprintf(stderr, "collect thing");
+	/*fprintf(stderr, "collect thing");*/
 	sdict_t *_sd = scfs->n_seq ? scfs : ctgs;
 	cdict_t *cds = calloc(_sd->n_seq << 1, sizeof(cdict_t));
 	for ( i = 0; i < _sd->n_seq << 1; ++i) cd_init(&cds[i]); //be careful with the access way
 	col_contacts(hit_ary, _sd, cds);
 	
-	fprintf(stderr, "finish thing");
+	/*fprintf(stderr, "finish thing");*/
 	free(hit_ary->ary); free(hit_ary);
 
 	uint32_t n_cds = _sd->n_seq << 1;

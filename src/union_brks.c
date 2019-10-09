@@ -193,7 +193,7 @@ cord_ctg_t *union_bs(cord_ctg_t *c1, uint32_t n, sdict_t *ctgs, uint32_t alwgap,
 	return cn;
 }
 
-int gen_bed(cord_ctg_t *cn, sdict_t *ctgs, bed_hdr_t *hdr, int exclude_brks, ns_t *ns, uint32_t allow_gaps)
+int gen_bed(cord_ctg_t *cn, sdict_t *ctgs, bed_hdr_t *hdr, int brks_sz, ns_t *ns)
 {
 	//print header
 	if (!hdr->type) hdr->type = strdup("UN");
@@ -210,7 +210,7 @@ int gen_bed(cord_ctg_t *cn, sdict_t *ctgs, bed_hdr_t *hdr, int exclude_brks, ns_
 	/*fprintf(stderr, "%u\n", n_coords);*/
 		uint32_t j;
 		for ( j = 0; j < n_coords; ++j) {
-            if (!(exclude_brks && !(coords[j].s & 0x1) && (near_gap(coords[j].s >> 1, coords[j].e, ns->ct[i].coords, ns->ct[i].n, allow_gaps)))) 
+            if (!(brks_sz && !(coords[j].s & 0x1) && (near_gap(coords[j].s >> 1, coords[j].e, ns->ct[i].coords, ns->ct[i].n, brks_sz)))) 
                 fprintf(stdout, "%s\t%u\t%u\t%c\n", ctgn,coords[j].s >> 1, coords[j].e, coords[j].s&0x1? 'S':'C');
 		}	
 	}
@@ -239,10 +239,10 @@ int main(int argc, char *argv[])
     int c;    
 	int option = 0; //the way to calculate molecule length //internal parameters not allowed to adjust by users
     uint32_t allow_gaps = 10000;
-    int exclude_brks = 0;
+    int brks_sz = 0;
 	int min_gapsz = 0;
 	char *scaf_brks = 0, *ctg_brks = 0;
-	while (~(c=getopt(argc, argv, "xg:s:c:h"))) {
+	while (~(c=getopt(argc, argv, "x:g:s:c:h"))) {
 		switch (c) {
 			case 'g':
 				allow_gaps = atoi(optarg); 
@@ -251,16 +251,16 @@ int main(int argc, char *argv[])
 				min_gapsz = atoi(optarg); 
 				break;
 			case 'x':
-				exclude_brks = 1; 
+				brks_sz = atoi(optarg); 
 				break;
 			default:
 				if (c != 'h') fprintf(stderr, "[E::%s] undefined option %c\n", __func__, c);
 help:	
 				fprintf(stderr, "\nUsage: union_bs [options] <GAP.BED> <CONTIG-LEVEL-BREAKS> <SCAFFOLD-LEVEL-BREAKS>\n");
 				fprintf(stderr, "Options:\n");
-				fprintf(stderr, "         -g          allowed gap size between two breaks [10000]\n");
+				fprintf(stderr, "         -g          gap size for chaining two breaks [10000]\n");
+				fprintf(stderr, "         -x          exclude breaks near N kb to the ends of contigs [0]\n");
 				fprintf(stderr, "         -s          minimum gap size to sepearate two contigs in a scaffold [0]\n");
-				fprintf(stderr, "         -x          exclude breaks near (<5kb) the ends of contigs [False] \n");
 				fprintf(stderr, "         -h          help\n");
 				return 1;	
 		}		
@@ -296,7 +296,7 @@ help:
 #ifdef VERBOSE
 	fprintf(stderr, "[M::%s] write bed information\n", __func__);
 #endif
-	gen_bed(cn, ctgs,&h, exclude_brks, ns, allow_gaps);
+	gen_bed(cn, ctgs,&h, brks_sz, ns);
 	cord_ctg_destroy(cn);	
 	sd_destroy(ctgs);
 	ns_destroy(ns);

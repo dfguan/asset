@@ -409,7 +409,7 @@ void sel_sup_reg_dyn(cov_ary_t *ca, float min_cov_rat, int min_cov, int max_cov,
 			uint32_t set_max_cov = max_cov;
 			uint32_t set_min_cov = max((uint32_t)(min_cov_rat *set_cov), min_cov);
 			/*int set_max_cov = max(max_cov_rat * set_cov, max_cov);*/
-			fprintf(stderr, "set_cov: %s\t%llu\t%lu\t%u\t%u\n", ctgs->seq[i].name, ca[i].tot_cov, ctgs->seq[i].len, set_max_cov, set_min_cov);
+			/*fprintf(stderr, "set_cov: %s\t%llu\t%lu\t%u\t%u\n", ctgs->seq[i].name, ca[i].tot_cov, ctgs->seq[i].len, set_max_cov, set_min_cov);*/
 			uint32_t pe, ps; 
 			uint8_t is_set = 0;
 			for (j = 0; j < ca[i].n; ++j)  {
@@ -471,10 +471,13 @@ void sel_sup_reg(cov_ary_t *ca, int min_cov, int max_cov, sdict_t* ctgs, char *t
 	}
 }
 
-cov_ary_t *cal_cov(ctg_pos_t *d, sdict_t* ctgs)
+
+cov_ary_t *cal_cov(ctg_pos_t *d, sdict_t* ctgs, float *avgcov4wg)
 {
 	cov_ary_t *ca = calloc(ctgs->n_seq, sizeof(cov_ary_t));
 	int i,j;
+	uint64_t gs = 0;
+	uint64_t tttcov = 0;
 	for (i = 0; i < d->n; ++i) {
 		ca[i].len = ctgs->seq[i].len;
 		long tot_cov = 0, cov = 0;
@@ -492,7 +495,7 @@ cov_ary_t *cal_cov(ctg_pos_t *d, sdict_t* ctgs)
 				e = ps->p[j] >> 1;
 				if (e >= s) {
 					if (cov < 0) {
-						fprintf(stderr, "Bug: coverage less than 0 Call dg\n");
+						fprintf(stderr, "Bug: coverage less than 0 Email Dengfeng\n");
 						return 0;	
 					}
 					cov_ary_push(&ca[i], s, e, cov);
@@ -504,7 +507,7 @@ cov_ary_t *cal_cov(ctg_pos_t *d, sdict_t* ctgs)
 				e = (ps->p[j] >> 1) - 1;
 				if (e >= s) {
 					if (cov < 0) {
-						fprintf(stderr, "Bug: coverage less than 0 Call dg\n");
+						fprintf(stderr, "Bug: coverage less than 0 Email Dengfeng\n");
 						return 0;	
 					}
 					cov_ary_push(&ca[i], s, e, cov);
@@ -516,7 +519,10 @@ cov_ary_t *cal_cov(ctg_pos_t *d, sdict_t* ctgs)
 		}
 		/*fprintf(stderr, "leave cal\n");*/
 		ca[i].tot_cov = tot_cov;	
+		tttcov += tot_cov;
+		gs += ctgs->seq[i].len;
 	}
+	*avgcov4wg = (double) tttcov / gs;
 	return ca;
 }
 
@@ -533,6 +539,22 @@ void ns_push(ns_t *ns, uint32_t i)
 		++ns->n;
 	} 
 	if (i >= ns->n) ++ns->n;
+}
+int cmp_u32(const void *a, const void *b)
+{
+	if (*(uint32_t *)a > *(uint32_t *)b) return -1;
+	else if  (*(uint32_t *)a < *(uint32_t *)b) return 1;
+	else return 0;
+}
+
+uint32_t cal_n50(uint32_t *v, uint32_t n)
+{
+	qsort(v, n, sizeof(uint32_t), cmp_u32);
+	uint64_t sum = 0, t = 0;
+	uint32_t i;
+	for (i = 0; i < n; ++i) sum += v[i];
+	for (i = 0; i < n && (float) t / sum < 0.5; t += v[i], ++i);
+	return v[i - 1];
 }
 
 void ns_destroy(ns_t *ns)

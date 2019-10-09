@@ -519,7 +519,8 @@ int aa_bionano(char *xmap_fn, char *rmap_fn, char *qmap_fn, char *key_fn, float 
 #ifdef VERBOSE
 	fprintf(stderr, "[M::%s] calculating coverage\n", __func__);
 #endif
-	cov_ary_t *ca = cal_cov(d, ctgs);
+	float tmp;
+	cov_ary_t *ca = cal_cov(d, ctgs, &tmp);
 	ctg_pos_destroy(d);
 	if (!ca) {
 		fprintf(stderr, "[W::%s] low quality alignments\n", __func__);

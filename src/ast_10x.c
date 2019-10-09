@@ -135,7 +135,7 @@ uint32_t get_target_end(uint32_t *cigar, int n_cigar, uint32_t s)
 
 
 /*bc_ary_t *proc_bam(char *srt_bam_fn, int min_as, int min_mq, uint32_t max_ins_len, sdict_t *ctgs, int opt)*/
-int proc_bam(char *bam_fn, int min_mq, uint32_t max_is, sdict_t *ctgs, int opt, bc_ary_t *bc_l)
+int proc_bam(char *bam_fn, int min_mq, uint32_t max_is, sdict_t *ctgs, sdict_t *bc_n, int opt, bc_ary_t *bc_l)
 {
 	bamFile fp;
 	bam_header_t *h;
@@ -157,8 +157,8 @@ int proc_bam(char *bam_fn, int min_mq, uint32_t max_is, sdict_t *ctgs, int opt, 
 
 	char *cur_qn = NULL, *cur_bc = NULL;
 	/*int32_t cur_l = 0;*/
-	sdict_t* bc_n = sd_init();
 	long bam_cnt = 0;
+	long rd_cnt = 0;
 	aln_inf_t aln;
 	kvec_t(aln_inf_t) alns;
 	kv_init(alns);
@@ -172,6 +172,7 @@ int proc_bam(char *bam_fn, int min_mq, uint32_t max_is, sdict_t *ctgs, int opt, 
 				if (cur_qn) free(cur_qn); 
 				cur_qn = strdup(bam1_qname(b));
 				cur_bc = cur_qn + b->core.l_qname - BC_LEN;
+				++rd_cnt;
 			}
 			if ((b->core.flag & 0x4) || (b->core.flag & 0x80)) continue; //not aligned
 			aln.s = b->core.pos + 1;
@@ -187,11 +188,11 @@ int proc_bam(char *bam_fn, int min_mq, uint32_t max_is, sdict_t *ctgs, int opt, 
 		}
 	}
 	fprintf(stderr, "[M::%s] finish processing %ld bams\n", __func__, bam_cnt); 
+	fprintf(stderr, "[M::%s] read pair counter: %ld\n", __func__, rd_cnt);
 	kv_destroy(alns);
 	bam_destroy1(b);
 	bam_header_destroy(h);
 	bam_close(fp);
-	sd_destroy(bc_n);	
 	return 0;
 }
 
@@ -262,7 +263,7 @@ void init_gaps(char *gap_fn, ns_t *ns, sdict_t *ctgs, uint32_t min_len)
 }
 /*ctg_pos_t *col_pos(bc_ary_t *bc_l, uint32_t min_bc, uint32_t max_bc, uint32_t min_inner_bcn, uint32_t min_mol_len, int n_targets)*/
 	/*cord_t *cc = col_cords(bc_l, min_bc, max_bc, min_inner_bcn, max_span, min_mol_len, ctgs->n_seq, ctgs);	*/
-cord_t *col_cords(bc_ary_t *bc_l, uint32_t min_maq, uint32_t min_bc, uint32_t max_bc, uint32_t min_inner_bcn, uint32_t max_span, uint32_t min_mol_len, int n_targets, sdict_t *ctgs, char *gap_fn)
+cord_t *col_cords(bc_ary_t *bc_l, uint32_t min_maq, uint32_t min_bc, uint32_t max_bc, uint32_t min_inner_bcn, uint32_t max_span, uint32_t min_mol_len, int n_targets, sdict_t *ctgs, char *gap_fn, uint32_t *n50)
 {
 
 	int k;
@@ -275,7 +276,8 @@ cord_t *col_cords(bc_ary_t *bc_l, uint32_t min_maq, uint32_t min_bc, uint32_t ma
 	radix_sort_bct(bc_l->ary, bc_l->ary + bc_l->n);	
 	uint32_t n = bc_l->n;
 	bc_t *p = bc_l->ary;
-
+	kvec_t(uint32_t) lenset;	
+	kv_init(lenset);
 	uint32_t i = 0;
 	uint32_t maqs;
 	while (i < n) {
@@ -291,9 +293,11 @@ cord_t *col_cords(bc_ary_t *bc_l, uint32_t min_maq, uint32_t min_bc, uint32_t ma
 			while (j <= z) {
 				if (j == z || p[j].bctn != p[i].bctn || (p[j].s - p[j-1].s > max_span && p[j].s - p[j-1].s - gap_sz(p[j-1].s, p[j].s, &ns->ct[p[i].bctn & 0xFFFFFFFF]) > max_span)) {
 					/*if (s > e) fprintf(stderr, "woofy%u\t%u\n", s, e);*/
-					fprintf(stderr, "%s\t%u\t%u\t%u\n",ctgs->seq[p[i].bctn&0xFFFFFFFF].name, s, e, j - i);
+					/*fprintf(stderr, "%s\t%u\t%u\t%u\n",ctgs->seq[p[i].bctn&0xFFFFFFFF].name, s, e, j - i);*/
 					if (j - i > min_inner_bcn && e - s > min_mol_len && maqs / (j-i) > min_maq) {
+
 						cors tmp = (cors) {s, e}; 
+						kv_push(uint32_t, lenset, e-s+1);
 						cord_push(&cc[p[i].bctn & 0xFFFFFFFF], &tmp);
 						/*fprintf(stderr, "%s\t%u\t%u\n",ctgs->seq[p[i].bctn&0xFFFFFFFF].name, s, e);*/
 					} 					
@@ -335,6 +339,8 @@ cord_t *col_cords(bc_ary_t *bc_l, uint32_t min_maq, uint32_t min_bc, uint32_t ma
 		/*if (bc_l->ary[k].s > bc_l->ary[k].e)*/
 			/*fprintf(stderr, "hhh%llx\t%llx\t%u\t%u\n", bc_l->ary[k].bctn >> 32, bc_l->ary[k].bctn & 0xFFFFFFFF, bc_l->ary[k].s, bc_l->ary[k].e);*/
 	/*}*/
+	*n50 = cal_n50(lenset.a, lenset.n);
+	kv_destroy(lenset);
 	ns_destroy(ns);
 	return cc;
 }
@@ -344,17 +350,19 @@ int aa_10x(char *bam_fn[], int n_bam, char *gap_fn, int min_mq, int min_cov, flo
 {
 	sdict_t *ctgs = sd_init();
 
+	sdict_t* bc_n = sd_init();
 #ifdef VERBOSE
 	fprintf(stderr, "[M::%s] processing bam file\n", __func__);
 #endif
 	int i;
 	bc_ary_t *bc_l = calloc(1, sizeof(bc_ary_t));
 	for ( i = 0; i < n_bam; ++i) {
-		if (proc_bam(bam_fn[i], min_mq, max_is, ctgs, opt, bc_l)) {
+		if (proc_bam(bam_fn[i], min_mq, max_is, ctgs, bc_n, opt, bc_l)) {
 			return -1;	
 		}	
 	}	
 
+	sd_destroy(bc_n);	
 	if (!(bc_l&&bc_l->n)) {
 		fprintf(stderr, "[W::%s] none useful information, quit\n", __func__);
 		return -1;
@@ -362,7 +370,8 @@ int aa_10x(char *bam_fn[], int n_bam, char *gap_fn, int min_mq, int min_cov, flo
 #ifdef VERBOSE
 	fprintf(stderr, "[M::%s] collecting coordinates\n", __func__);
 #endif
-	cord_t *cc = col_cords(bc_l, min_mq, min_bc, max_bc, min_inner_bcn, max_span, min_mol_len, ctgs->n_seq, ctgs, gap_fn);	
+	uint32_t n50;
+	cord_t *cc = col_cords(bc_l, min_mq, min_bc, max_bc, min_inner_bcn, max_span, min_mol_len, ctgs->n_seq, ctgs, gap_fn, &n50);	
 	free(bc_l->ary); free(bc_l);	
 #ifdef VERBOSE
 	fprintf(stderr, "[M::%s] collecting positions\n", __func__);
@@ -372,8 +381,9 @@ int aa_10x(char *bam_fn[], int n_bam, char *gap_fn, int min_mq, int min_cov, flo
 #ifdef VERBOSE
 	fprintf(stderr, "[M::%s] calculating coverage\n", __func__);
 #endif
-	cov_ary_t *ca = cal_cov(d, ctgs);
-
+	float avgcov4wg;
+	cov_ary_t *ca = cal_cov(d, ctgs, &avgcov4wg);
+		
 	ctg_pos_destroy(d);
 	if (!ca) {
 		fprintf(stderr, "[W::%s] low quality alignments\n", __func__);
@@ -399,7 +409,7 @@ int aa_10x(char *bam_fn[], int n_bam, char *gap_fn, int min_mq, int min_cov, flo
 #endif
 	cov_ary_destroy(ca, ctgs->n_seq); //a little bit messy
 	sd_destroy(ctgs);
-
+	fprintf(stderr, "[M::%s] average molecular coverage: %.2f, molecular length N50: %u\n", __func__, avgcov4wg, n50);
 	fprintf(stderr, "Program finished successfully\n");
 	return 0;
 
@@ -413,7 +423,7 @@ int main(int argc, char *argv[])
 	int max_cov = 1000000, min_cov = 10, min_mq = 20;
 	int min_as = 0;
 	uint32_t max_span = 20000, min_inner_bcn = 5, min_mol_len = 1000;
-	uint32_t min_bc = 5, max_bc = 1000000, max_is=1000;
+	uint32_t min_bc = 20, max_bc = 1000000, max_is=1000;
 	float min_cov_rat = .15;
 	char *r;
 	char *out_dir = ".";
