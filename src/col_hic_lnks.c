@@ -32,6 +32,7 @@ typedef struct {
 	/*int mq:15, rev:1, as:16;*/
 	uint32_t s, ns;
    	uint32_t tid:31, rev:1;
+	int qual;
 }aln_inf_t;
 
 typedef struct {
@@ -257,36 +258,36 @@ int col_contacts(hit_ary_t *hit_ary, sdict_t *sd, cdict_t *cs)
 }
 
 
-
-int col_hits(aln_inf_t *a, int a_cnt, aln_inf_t *f, int f_cnt, sdict_t *ctgs, sdict_t *scfs, hit_ary_t *hit_ary)
+int col_hits(aln_inf_t *f, int f_cnt, sdict_t *ctgs, sdict_t *scfs, hit_ary_t *hit_ary, int min_mq)
 {
+	if (f[0].qual < min_mq || f[1].qual < min_mq) return 1;
 	if (scfs->n_seq) {
-		if (a_cnt == 2) {
+		/*if (a_cnt == 2) {*/
 			/*fprintf(stderr, "%u\t%u\n", a[0].tid, a[1].tid);*/
-			sd_seq_t *sq1 = &ctgs->seq[a[0].tid];
-			sd_seq_t *sq2 = &ctgs->seq[a[1].tid];
+			/*sd_seq_t *sq1 = &ctgs->seq[a[0].tid];*/
+			/*sd_seq_t *sq2 = &ctgs->seq[a[1].tid];*/
 
-			uint32_t ind1 = sq1->le; //maybe not well paired up
-			uint32_t ind2 = sq2->le;
-			if (ind1 == ind2) return 1;
+			/*uint32_t ind1 = sq1->le; //maybe not well paired up*/
+			/*uint32_t ind2 = sq2->le;*/
+			/*if (ind1 == ind2) return 1;*/
 			/*fprintf(stderr, "%s\t%s\t%u\t%u\n", sq1->name, sq2->name, ind1, ind2);*/
 			/*fprintf(stderr, "%s\t%s\n", r->ctgn1, r->ctgn2)	;*/
-			uint32_t a0s = sq1->l_snp_n == a[0].rev ? sq1->rs + a[0].s : sq1->rs + sq1->len - a[0].s; 
-			uint32_t a1s = sq2->l_snp_n == a[1].rev ? sq2->rs + a[1].s : sq2->rs + sq2->len - a[1].s; 
+			/*uint32_t a0s = sq1->l_snp_n == a[0].rev ? sq1->rs + a[0].s : sq1->rs + sq1->len - a[0].s; */
+			/*uint32_t a1s = sq2->l_snp_n == a[1].rev ? sq2->rs + a[1].s : sq2->rs + sq2->len - a[1].s; */
 			
-			if (ind1 < ind2) {
-				uint64_t c1ns = (uint64_t)ind1 << 32 | a0s; //don't think there will be 2G contig, if happends might be a bug 
-				uint64_t c2ns = (uint64_t)ind2 << 32 | a1s; //don't think there will be 2G contig, if happends might be a bug 
-				hit_t h = (hit_t) {c1ns, a[0].rev, c2ns, a[1].rev}; 
-				hit_ary_push(hit_ary, &h);	
-			} else {
-				uint64_t c1ns = (uint64_t)ind2 << 32 | a1s; //don't think there will be 2G contig, if happends might be a bug 
-				uint64_t c2ns = (uint64_t)ind1 << 32 | a0s; //don't think there will be 2G contig, if happends might be a bug 
-				hit_t h = (hit_t) {c1ns, a[0].rev, c2ns, a[1].rev}; 
-				hit_ary_push(hit_ary, &h);	
-			}
-			return 0;
-		} else if (f_cnt == 2){
+			/*if (ind1 < ind2) {*/
+				/*uint64_t c1ns = (uint64_t)ind1 << 32 | a0s; //don't think there will be 2G contig, if happends might be a bug */
+				/*uint64_t c2ns = (uint64_t)ind2 << 32 | a1s; //don't think there will be 2G contig, if happends might be a bug */
+				/*hit_t h = (hit_t) {c1ns, a[0].rev, c2ns, a[1].rev}; */
+				/*hit_ary_push(hit_ary, &h);	*/
+			/*} else {*/
+				/*uint64_t c1ns = (uint64_t)ind2 << 32 | a1s; //don't think there will be 2G contig, if happends might be a bug */
+				/*uint64_t c2ns = (uint64_t)ind1 << 32 | a0s; //don't think there will be 2G contig, if happends might be a bug */
+				/*hit_t h = (hit_t) {c1ns, a[1].rev, c2ns, a[0].rev}; */
+				/*hit_ary_push(hit_ary, &h);	*/
+			/*}*/
+			/*return 0;*/
+		/*} else if (f_cnt == 2){*/
 			sd_seq_t *sq1 = &ctgs->seq[f[0].tid];
 			sd_seq_t *sq2 = &ctgs->seq[f[1].tid];
 			uint32_t ind1 = sq1->le; //maybe not well paired up
@@ -304,40 +305,38 @@ int col_hits(aln_inf_t *a, int a_cnt, aln_inf_t *f, int f_cnt, sdict_t *ctgs, sd
 			} else {
 				uint64_t c1ns = (uint64_t)ind2 << 32 | f1s; //don't think there will be 2G contig, if happends might be a bug 
 				uint64_t c2ns = (uint64_t)ind1 << 32 | f0s; //don't think there will be 2G contig, if happends might be a bug 
-				hit_t h = (hit_t) {c1ns, f[0].rev, c2ns, f[1].rev}; 
+				hit_t h = (hit_t) {c1ns, f[1].rev, c2ns, f[0].rev}; 
 				hit_ary_push(hit_ary, &h);	
 			}
 			return 0;	
-		}
+		/*}*/
 	} else {
-		if (a_cnt == 2) {
-			uint32_t ind1 = a[0].tid; //maybe not well paired up
-			uint32_t ind2 = a[1].tid;
-			/*fprintf(stderr, "A\t%s\t%u\t%d\t%s\t%u\t%d\n", ctgs->seq[ind1].name, a[0].s, a[0].rev, ctgs->seq[ind2].name, a[1].s, a[1].rev);*/
-			if (ind1 == ind2) return 1;
+		/*if (a_cnt == 2) {*/
+			/*uint32_t ind1 = a[0].tid; //maybe not well paired up*/
+			/*uint32_t ind2 = a[1].tid;*/
+			/*if (ind1 == ind2) return 1;*/
 			/*fprintf(stderr, "%u\t%u\n", ind1, ind2);*/
 			/*fprintf(stderr, "%s\t%s\n", r->ctgn1, r->ctgn2)	;*/
-			uint32_t is_l1 = check_left_half(ctgs->seq[ind1].le, ctgs->seq[ind1].rs, a[0].s);
-			if (is_l1 > 1) return 1; //middle won't be added
-			uint32_t is_l2 = check_left_half(ctgs->seq[ind2].le, ctgs->seq[ind2].rs, a[1].s);
-			if (is_l2 > 1) return 1; //middle won't be added
+			/*uint32_t is_l1 = check_left_half(ctgs->seq[ind1].le, ctgs->seq[ind1].rs, a[0].s);*/
+			/*if (is_l1 > 1) return 1; //middle won't be added*/
+			/*uint32_t is_l2 = check_left_half(ctgs->seq[ind2].le, ctgs->seq[ind2].rs, a[1].s);*/
+			/*if (is_l2 > 1) return 1; //middle won't be added*/
 			
-			if (ind1 < ind2) {
-				uint64_t c1ns = (uint64_t)ind1 << 32 | a[0].s; //don't think there will be 2G contig, if happends might be a bug 
-				uint64_t c2ns = (uint64_t)ind2 << 32 | a[1].s; //don't think there will be 2G contig, if happends might be a bug 
-				hit_t h = (hit_t) {c1ns, a[0].rev, c2ns, a[1].rev}; 
-				hit_ary_push(hit_ary, &h);	
-			} else {
-				uint64_t c1ns = (uint64_t)ind2 << 32 | a[1].s; //don't think there will be 2G contig, if happends might be a bug 
-				uint64_t c2ns = (uint64_t)ind1 << 32 | a[0].s; //don't think there will be 2G contig, if happends might be a bug 
-				hit_t h = (hit_t) {c1ns, a[0].rev, c2ns, a[1].rev}; 
-				hit_ary_push(hit_ary, &h);	
-			}
-			return 0;
-		} else if (f_cnt == 2){
+			/*if (ind1 < ind2) {*/
+				/*uint64_t c1ns = (uint64_t)ind1 << 32 | a[0].s; //don't think there will be 2G contig, if happends might be a bug */
+				/*uint64_t c2ns = (uint64_t)ind2 << 32 | a[1].s; //don't think there will be 2G contig, if happends might be a bug */
+				/*hit_t h = (hit_t) {c1ns, a[0].rev, c2ns, a[1].rev}; */
+				/*hit_ary_push(hit_ary, &h);	*/
+			/*} else {*/
+				/*uint64_t c1ns = (uint64_t)ind2 << 32 | a[1].s; //don't think there will be 2G contig, if happends might be a bug */
+				/*uint64_t c2ns = (uint64_t)ind1 << 32 | a[0].s; //don't think there will be 2G contig, if happends might be a bug */
+				/*hit_t h = (hit_t) {c1ns, a[1].rev, c2ns, a[0].rev}; */
+				/*hit_ary_push(hit_ary, &h);	*/
+			/*}*/
+			/*return 0;*/
+		/*} else if (f_cnt == 2){*/
 			uint32_t ind1 = f[0].tid;
 			uint32_t ind2 = f[1].tid;
-			/*fprintf(stderr, "A\t%s\t%u\t%d\t%s\t%u\t%d\n", ctgs->seq[ind1].name, f[0].s, f[0].rev, ctgs->seq[ind2].name, f[1].s, f[1].rev);*/
 			if (ind1 == ind2) return 1;
 			/*fprintf(stderr, "%s\t%s\n", r->ctgn1, r->ctgn2)	;*/
 			if (ind1 < ind2) {
@@ -348,11 +347,11 @@ int col_hits(aln_inf_t *a, int a_cnt, aln_inf_t *f, int f_cnt, sdict_t *ctgs, sd
 			} else {
 				uint64_t c1ns = (uint64_t)ind2 << 32 | f[1].s; //don't think there will be 2G contig, if happends might be a bug 
 				uint64_t c2ns = (uint64_t)ind1 << 32 | f[0].s; //don't think there will be 2G contig, if happends might be a bug 
-				hit_t h = (hit_t) {c1ns, f[0].rev, c2ns, f[1].rev}; 
+				hit_t h = (hit_t) {c1ns, f[1].rev, c2ns, f[0].rev}; 
 				hit_ary_push(hit_ary, &h);	
 			}
 			return 0;	
-		}
+		/*}*/
 	}
 	return 1;
 }
@@ -411,41 +410,46 @@ int proc_bam(char *bam_fn, int min_mq, sdict_t *ctgs, sdict_t *scfs, hit_ary_t *
 
 	uint8_t rev;
 	uint64_t rdp_counter  = 0;
+	uint32_t rd1_cnt = 0, rd2_cnt = 0;
+	uint32_t rd1_5cnt = 0, rd2_5cnt = 0;
 	uint64_t used_rdp_counter = 0;
 	/*fprintf(stderr, "Proc Bam %d\n", __LINE__);*/
 	while (1) {
 		//segment were mapped 
 		if (bam_read1(fp, b) >= 0 ) {
 			if (!cur_qn || strcmp(cur_qn, bam1_qname(b)) != 0) {
-				if (!col_hits(all.a, all.n, five.a, five.n, ctgs, scfs, ha)) ++used_rdp_counter;
+				if (rd1_cnt < 3 && rd2_cnt < 3 && rd1_5cnt == 1 && rd2_5cnt == 1 && !col_hits(five.a, five.n, ctgs, scfs, ha, min_mq)) ++used_rdp_counter;
 				/*aln_cnt = 0;	*/
 				/*rev = 0;*/
 				/*is_set = 0;*/
-				kv_reset(all);
+				/*kv_reset(all);*/
 				kv_reset(five);
-				if (cur_qn) free(cur_qn); 
+				rd1_cnt = rd2_cnt = rd1_5cnt = rd2_5cnt = 0;
+				if (cur_qn) ++rdp_counter, free(cur_qn); 
 				cur_qn = strdup(bam1_qname(b));
-				++rdp_counter; 
 			}
-			if (b->core.flag & 0x4 || b->core.qual < min_mq) continue; //not aligned
+			b->core.flag & 0x40 ? ++rd1_cnt : ++rd2_cnt;	
+			if (b->core.flag & 0x4) continue; //not aligned
 			aln_inf_t tmp;
-			tmp.rev = !!(b->core.flag & 0x10);
+			rev = tmp.rev = !!(b->core.flag & 0x10);
 			/*tmp.nrev = !!(b->core.flag & 0x20);*/
 			//only collects five prime
 			tmp.tid = b->core.tid;
 			/*tmp.ntid = b->core.mtid;*/
 			tmp.s = b->core.pos + 1;
+			tmp.qual = b->core.qual;
 			/*tmp.ns = b->core.mpos + 1;*/
-			kv_push(aln_inf_t, all, tmp);
-			
+			/*kv_push(aln_inf_t, all, tmp);*/
+				
 			uint32_t *cigar = bam1_cigar(b);
-			if ((rev && bam_cigar_op(cigar[0]) == BAM_CMATCH) || (!rev && bam_cigar_op(cigar[b->core.n_cigar-1]) == BAM_CMATCH)) 
-				kv_push(aln_inf_t, five, tmp);
+			if ((!rev && bam_cigar_op(cigar[0]) == BAM_CMATCH) || (rev && bam_cigar_op(cigar[b->core.n_cigar-1]) == BAM_CMATCH)) {
+				b->core.flag & 0x40 ? ++rd1_5cnt: ++rd2_5cnt; kv_push(aln_inf_t, five, tmp);
+			}
 			
 			/*aln_cnt = (aln_cnt + 1 ) & 1;*/
 			/*if ((++bam_cnt % 1000000) == 0) fprintf(stderr, "[M::%s] processing %ld bams\n", __func__, bam_cnt); */
 		} else {
-			if (!col_hits(all.a, all.n, five.a, five.n, ctgs, scfs, ha)) ++used_rdp_counter;
+			if (rd1_cnt < 3 && rd2_cnt < 3 && rd1_5cnt == 1 && rd2_5cnt == 1 && !col_hits(five.a, five.n, ctgs, scfs, ha, min_mq)) ++used_rdp_counter;
 			if (cur_qn) ++rdp_counter, free(cur_qn); 
 			break;	
 		}
@@ -458,7 +462,6 @@ int proc_bam(char *bam_fn, int min_mq, sdict_t *ctgs, sdict_t *scfs, hit_ary_t *
 	kv_destroy(five);
 	return 0;
 }
-
 
 int chl_col_ctgs(char *bam_fn, sdict_t *ctgs, uint32_t ws)
 {
