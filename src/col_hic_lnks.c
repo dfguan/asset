@@ -64,10 +64,13 @@ int cmp_hits(const void *a, const void *b)
 	hit_t *n = (hit_t *)b; //too many branches
 	if (m->c1ns > n->c1ns) return 1;	
 	else if (m->c1ns < n->c1ns) return -1;
+	else if (m->qrev > n->qrev) return 1;
+	else if (m->qrev < n->qrev) return -1;
 	else if (m->c2ns > n->c2ns) return 1;	
-	else if (m->c2ns == n->c2ns) return 0;
+	else if (m->c2ns < n->c2ns) return -1;	
+	else if (m->trev > n->trev) return 1;
+	else if (m->trev == n->trev) return 0;
 	else return -1;
-
 }
 
 uint32_t check_left_half(uint32_t le, uint32_t rs, uint32_t p) // 1 for left half 0 for right half 2 for middle
