@@ -133,7 +133,7 @@ bin/acc $output_dir/gaps.bed $output_dir/{10x,hic2,bn}.bed > $output_dir/10x_hic
 ```
 bin/pchlst -c $output_dir/gaps.bed $output_dir/pb_bn.bed > $output_dir/pchlst_ctg.bed
 bin/pchlst $output_dir/gaps.bed $output_dir/10x_hic2_bn.bed > $output_dir/pchlst_scaf.bed 
-bin/union_brks -x $output_dir/gaps.bed $output_dir/pchlst_{ctg,scaf}.bed > $output_dir/pchlst_final.bed
+bin/union_brks $output_dir/gaps.bed $output_dir/pchlst_{ctg,scaf}.bed > $output_dir/pchlst_final.bed
 ```
 
 ## Contact
