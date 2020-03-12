@@ -161,7 +161,6 @@ def assess_10x(man, ref, fofn, core_lim, mem_lim, queue, out_dir, bin_dir, spid,
     with open(fofn, "r") as f:
         for fl in f:
             fl_strip = fl.strip()
-            # out_fn = "{0}/{1}.bam".format(out_dir, getfn(fl_strip).split(".")[0])
             out_fn = "{0}/{1}.bam".format(out_dir, get_lm_prefix(getfn(fl_strip.split('\t')[0])))
             out_fns.append(out_fn)
             in_fns.append(fl_strip)
@@ -231,7 +230,7 @@ def assess_hic2(man, ref, fofn, core_lim, mem_lim, queue, out_dir, bin_dir, spid
         
         j = hpc("lsf", cmd=jcmd, core=1, mem = 20000, jn=jjn, out=jout, err=jerr)
         
-        rtn = man.start([j])
+        rtn = man.start([j], True)
         if rtn:
             return 
         jcmd = "{0}/ast_hic2 {3} {2}/links.mat >{2}/hic2.bed".format(bin_dir, " ".join(out_fns), out_dir, faidx_fn)
@@ -401,7 +400,7 @@ def assess_bn_core(p):
     jerr = "{0}/{1}.e".format(out_dir, ind)
     
     j = hpc("lsf", cmd=jcmd, mem=1000, jn=jjn, out=jout, err=jerr)
-    rtn = man.start([j], True)
+    rtn = man.start([j])
     if not rtn:
         jcmd = ['cp', fn, out_dir] 
         j = hpc(cmd=jcmd, out="{}/cp.o".format(out_dir))
@@ -415,7 +414,7 @@ def assess_bn_core(p):
             jcmd = " ".join(["python2",  solve_dir+"Pipeline/04122018/runCharacterize.py","-t",  solve_dir+"RefAligner/7437.7523rel/RefAligner","-q", query_cmap, "-r", ref_cmap, "-p", solve_dir+"Pipeline/04122018/", "-a", solve_dir+"RefAligner/7437.7523rel/optArguments_{1}_{0}.xml".format(optn, "haplotype" if ishap else "nonhaplotype"), "-n","2"])
              
             j = hpc("lsf", cpu="avx", mem=mem_lim, core=core_lim, queue=queue, cmd=jcmd, jn="bn_refalign", out="{0}/bn_refalign_{1}.o".format(out_dir, enzyme[0:4]))
-            rtn = man.start([j], True) 
+            rtn = man.start([j]) 
             if not rtn:
                 ref_lm_pref = get_lm_prefix(ref)
                 map_path = "{0}/alignref/{1}".format(out_dir, get_rm_prefix(fn))
@@ -467,7 +466,6 @@ def acc(man, ref, out_dir, bin_dir, spid):
         # rtn = man.start([j])
         # if rtn:
             # return 
-    # beds = []
     # for fn in ["gaps.bed", "10x.bed", "bn.bed", "hic.bed", "pb.bed"]:
         # fpath = "{0}/{1}".format(out_dir,fn)
         # if checkf(fpath):
@@ -480,22 +478,29 @@ def acc(man, ref, out_dir, bin_dir, spid):
         # j = hpc("lsf", cmd=jcmd, core=1, mem = 20000, jn=jjn, out=jout, err=jerr)
         # man.start([j], True)
     #acc contig
-    
-    jcmd = "{0}/acc {2}/gaps.bed {2}/pb.bed {2}/bn.bed > {2}/pb_bn.bed".format(bin_dir, " ".join(beds), out_dir) 
+    beds = []
+    for fn in ["pb.bed", "bn.bed"]:
+        fpath = "{0}/{1}".format(out_dir,fn)
+        if checkf(fpath):
+            beds.append(fpath)
+    jcmd = "{0}/acc {2}/gaps.bed {1} > {2}/pb_bn.bed".format(bin_dir, " ".join(beds), out_dir) 
     jjn = "acc_contig_{}".format(spid)
     jout = "{0}/acc_contig_{1}.o".format(out_dir, spid)
     jerr = "{0}/acc_contig_{1}.e".format(out_dir, spid)
     j = hpc("lsf", cmd=jcmd, core=1, mem = 20000, jn=jjn, out=jout, err=jerr)
     man.start([j], True)
 
-    jcmd = "{0}/acc {2}/gaps.bed {2}/10x.bed {2}/hic2.bed {2}/bn.bed > {2}/10x_hic2_bn.bed".format(bin_dir, " ".join(beds), out_dir) 
+    for fn in ["10x.bed", "hic2.bed", "bn.bed"]:
+        fpath = "{0}/{1}".format(out_dir,fn)
+        if checkf(fpath):
+            beds.append(fpath)
+    jcmd = "{0}/acc {2}/gaps.bed {1} > {2}/10x_hic2_bn.bed".format(bin_dir, " ".join(beds), out_dir) 
     jjn = "acc_scaf_{}".format(spid)
     jout = "{0}/acc_scaf_{1}.o".format(out_dir, spid)
     jerr = "{0}/acc_scaf_{1}.e".format(out_dir, spid)
     j = hpc("lsf", cmd=jcmd, core=1, mem = 20000, jn=jjn, out=jout, err=jerr)
     man.start([j], True)
     
-
 
 def punchlist(man, ref, out_dir, bin_dir, spid):
     # all_bed = "{}/acc.bed".format(out_dir)

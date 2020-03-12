@@ -81,7 +81,7 @@ int acc_evd2(char *evd, uint8_t *sig, sdict_t *ctgs, uint64_t* sig_ind)
 	for ( ind_tp = 0; ind_tp < tp_s; ++ind_tp) {
 		if (*(uint16_t *)hdr.type == *(uint16_t *)tp[ind_tp]) break;
 	}
-		/*fprintf(stderr, "haha:%s\n", hdr.type);*/
+		/*fprintf(stderr, "haha:%u\n", ind_tp);*/
 	while (bed_read(bfp, &r) >= 0) {
 		uint64_t ind = sd_get(ctgs, r.ctgn);
 		

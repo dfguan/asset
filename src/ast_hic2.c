@@ -829,8 +829,11 @@ int parse_name(char *s, int l, name_t *nt)
 {
 	char *q, *r;
 	int i, t;
+	//target the last - 
+	int last_dash;
+	for (i = 0; i < l; ++i) if (s[i] == '-') last_dash = i;
 	for (i = t = 0, q = s; i <= l; ++i) {
-		if (i < l && s[i] != ':' && s[i] != '-') continue;
+		if (i < l && s[i] != ':' && i != last_dash) continue;
 		s[i] = 0;
 		if (t == 0) nt->ctgn = q, nt->nl = i;
 		else if (t == 1) nt->s = strtol(q, &r, 10), s[i] = '-';
@@ -839,7 +842,6 @@ int parse_name(char *s, int l, name_t *nt)
 	}
 	if (t < 2) return -1;
 	return 0;
-
 }
 
 int sel_supt_reg(uint32_t *brks, uint32_t n_brks, sdict_t *ctgs) 

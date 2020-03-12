@@ -174,6 +174,7 @@ void init_gaps(char *gap_fn, ns_t *ns, sdict_t *ctgs)
 	bed_rec_t r;
 	while (bed_read(bf, &r) >= 0) {
 		uint32_t ind = sd_put(ctgs, r.ctgn, 0);
+		ctgs->seq[ind].len = r.e;
 		/*if (r.e - r.s >= max_ins_len) {*/
 		ns_push(ns, ind);
 		cors tmp = (cors){r.s, r.e}; //don't change to one based
@@ -190,14 +191,17 @@ int wrt_pchlst2(bed_ary_t *bd, sdict_t *ctgs, ns_t *ns, int isctg)
 	size_t i;	
 	bed_inf_t *a = bd->bi;	
 	char *ctgn = bd->ctgn;
-	/*uint32_t ctgid = sd_get(ctgs, ctgn);*/
+	uint32_t ctgid = sd_get(ctgs, ctgn);
+	uint32_t ctglen = ctgs->seq[ctgid].len;
 	/*cord_t *ct = &ns->ct[ctgid];*/
     /*int neargap;*/
 	/*uint32_t ctglen = a[n-1].e;*/
 	for ( i = 0; i < n; ++i) {
 		if (!a[i].n_tech) {
-			if (a[i].isgap && !isctg) 
+			if (a[i].isgap && !isctg) {
+				if (a[i].s && a[i].e != ctglen)
 				fprintf(stdout, "%s\t%u\t%u\n", ctgn, a[i].s, a[i].e);	
+			}
 			else if (!a[i].isgap && isctg)	
 				fprintf(stdout, "%s\t%u\t%u\n", ctgn, a[i].s, a[i].e);	
 		}

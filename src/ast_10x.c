@@ -96,10 +96,15 @@ uint32_t gap_sz(uint32_t s, uint32_t e, cord_t *ct) //search first greater
 	return gap_size;
 }
 
-void col_bcnt(aln_inf_t  *fal, uint32_t bc, int min_mq, uint32_t max_is, bc_ary_t *l)
+void col_bcnt(aln_inf_t  *fal, int n_fal, uint32_t bc, int min_mq, uint32_t max_is, bc_ary_t *l)
 {
 	/*if (fal->mq >= min_mq) {*/ //should we allow user to set minimum mapping quality for each alignment? maybe not, those alignments with zero mapping quality are useful to bridge the gaps between two separate alignments
-		uint32_t s = fal->s;
+	int i;
+	for ( i = 0; i < n_fal; ++i) {
+		bc_t t = (bc_t) {fal[i].s, fal[i].mq, (uint64_t)bc << 32 | fal[i].tid};
+		
+		bc_ary_push(l, &t);	
+	}	
 		/*uint32_t e = fal->e;*/
 		/*s = s << 1;*/
 		/*e = e << 1 | 1; */
@@ -110,9 +115,6 @@ void col_bcnt(aln_inf_t  *fal, uint32_t bc, int min_mq, uint32_t max_is, bc_ary_
 				/*e = tmp;*/
 			/*}*/
 		/*if (e - s < max_is) {*/
-			bc_t t = (bc_t) {s, fal->mq, (uint64_t)bc << 32 | fal->tid};
-			
-			bc_ary_push(l, &t);	
 		/*}*/
 		/*}*/
 		/*pos_push(&d->ctg_pos[fal[0].tid], s);*/
@@ -167,7 +169,7 @@ int proc_bam(char *bam_fn, int min_mq, uint32_t max_is, sdict_t *ctgs, sdict_t *
 		if (bam_read1(fp, b) >= 0 ) {
 			if (!cur_qn || strcmp(cur_qn, bam1_qname(b)) != 0) {
 				/*fprintf(stderr, "%d\t%d\t%d\n", aln_cnt, rev, aln.mq);*/
-				if (alns.n) col_bcnt(&aln, sd_put(bc_n, cur_bc, BC_LEN), min_mq, max_is, bc_l);
+				if (alns.n) col_bcnt(alns.a, alns.n, sd_put(bc_n, cur_bc, BC_LEN), min_mq, max_is, bc_l);
 				kv_reset(alns);
 				if (cur_qn) free(cur_qn); 
 				cur_qn = strdup(bam1_qname(b));
@@ -183,7 +185,7 @@ int proc_bam(char *bam_fn, int min_mq, uint32_t max_is, sdict_t *ctgs, sdict_t *
 			if ((++bam_cnt % 1000000) == 0) fprintf(stderr, "[M::%s] processing %ld bams\n", __func__, bam_cnt); 
 		} else {
 			/*fprintf(stderr, "%d\t%d\t%d\n", aln_cnt, rev, aln.mq);*/
-			if (alns.n) col_bcnt(&aln, sd_put(bc_n, cur_bc, BC_LEN), min_mq, max_is, bc_l);
+			if (alns.n) col_bcnt(alns.a, alns.n, sd_put(bc_n, cur_bc, BC_LEN), min_mq, max_is, bc_l);
 			break;	
 		}
 	}
@@ -478,7 +480,7 @@ help:
 				/*fprintf(stderr, "         -S    INT      minimum aislignment score [0]\n");*/
 				fprintf(stderr, "         -l    INT      minimum molecule length [1000]\n");
 				fprintf(stderr, "         -S    INT      maximum spanning length [20000]\n");
-				fprintf(stderr, "         -L    INT      maximum insertion length [1000]\n");
+				/*fprintf(stderr, "         -L    INT      maximum insertion length [1000]\n");*/
 				fprintf(stderr, "         -a    INT      minimum barcode for contig [5]\n");
 				fprintf(stderr, "         -h             help\n");
 				return 1;	

@@ -1,9 +1,9 @@
 /*
  * =====================================================================================
  *
- *       Filename:  union_beds.c
+ *       Filename:  union_brks.c
  *
- *    Description:  merge two beds file
+ *    Description:  merge contig and scaffold breaks
  *
  *        Version:  1.0
  *        Created:  26/09/2018 15:29:15
@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
     int c;    
 	int option = 0; //the way to calculate molecule length //internal parameters not allowed to adjust by users
     uint32_t allow_gaps = 10000;
-    int brks_sz = 0;
+    int brks_sz = 1000;
 	int min_gapsz = 0;
 	char *scaf_brks = 0, *ctg_brks = 0;
 	while (~(c=getopt(argc, argv, "x:g:s:c:h"))) {
@@ -259,7 +259,7 @@ help:
 				fprintf(stderr, "\nUsage: union_bs [options] <GAP.BED> <CONTIG-LEVEL-BREAKS> <SCAFFOLD-LEVEL-BREAKS>\n");
 				fprintf(stderr, "Options:\n");
 				fprintf(stderr, "         -g          gap size for chaining two breaks [10000]\n");
-				fprintf(stderr, "         -x          exclude breaks near N kb to the ends of contigs [0]\n");
+				fprintf(stderr, "         -x          exclude breaks near N kb to the ends of contigs [1000]\n");
 				fprintf(stderr, "         -s          minimum gap size to sepearate two contigs in a scaffold [0]\n");
 				fprintf(stderr, "         -h          help\n");
 				return 1;	
