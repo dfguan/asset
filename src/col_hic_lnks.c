@@ -64,10 +64,13 @@ int cmp_hits(const void *a, const void *b)
 	hit_t *n = (hit_t *)b; //too many branches
 	if (m->c1ns > n->c1ns) return 1;	
 	else if (m->c1ns < n->c1ns) return -1;
+	else if (m->qrev > n->qrev) return 1;
+	else if (m->qrev < n->qrev) return -1;
 	else if (m->c2ns > n->c2ns) return 1;	
-	else if (m->c2ns == n->c2ns) return 0;
+	else if (m->c2ns < n->c2ns) return -1;	
+	else if (m->trev > n->trev) return 1;
+	else if (m->trev == n->trev) return 0;
 	else return -1;
-
 }
 
 uint32_t check_left_half(uint32_t le, uint32_t rs, uint32_t p) // 1 for left half 0 for right half 2 for middle
@@ -245,9 +248,9 @@ int col_contacts(hit_ary_t *hit_ary, sdict_t *sd, cdict_t *cs)
 			uint32_t a0s = (uint32_t) hs[i].c1ns; 
 			uint32_t a1s = (uint32_t) hs[i].c2ns; 
 			uint32_t is_l1 = check_left_half(use_sd->seq[ind1].le, use_sd->seq[ind1].rs, a0s);
-			if (is_l1 > 1) return 1; //middle won't be added
+			if (is_l1 > 1) continue; //middle won't be added
 			uint32_t is_l2 = check_left_half(use_sd->seq[ind2].le, use_sd->seq[ind2].rs, a1s);
-			if (is_l2 > 1) return 1; //middle won't be added
+			if (is_l2 > 1) continue; //middle won't be added
 			/*fprintf(stderr, "%s\t%u\t%s\t%u\n", sd->seq[ind1].name, a0s, sd->seq[ind2].name, a1s);*/
 			cd_add(&cs[ind1<<1|is_l1], use_sd->seq[ind2].name, is_l2, is_l2?use_sd->seq[ind2].l_snp_n:use_sd->seq[ind2].r_snp_n);		
 			cd_add(&cs[ind2<<1|is_l2], use_sd->seq[ind1].name, is_l1, is_l1?use_sd->seq[ind1].l_snp_n:use_sd->seq[ind1].r_snp_n);		
@@ -255,6 +258,7 @@ int col_contacts(hit_ary_t *hit_ary, sdict_t *sd, cdict_t *cs)
 			i = j;	
 		}
 	}
+	return 0;
 }
 
 
