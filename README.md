@@ -53,7 +53,7 @@ bwa index $asm
 while read -r r1 r2
 do
 	prefix=`basename $r1 .fastq.gz`
-	10x_trim -c -p $prefix $r1 $r2 # generate trimmed read files $prefix_{1,2}.fq.gz
+	bin/10x -c -p $prefix $r1 $r2 # generate trimmed read files $prefix_{1,2}.fq.gz
 	bwa mem -t12 $asm $prefix_1.fq.gz $prefix_2.fq.gz | samtools view -b - > $prefix.bam
 done < $10xlist
 
@@ -62,7 +62,8 @@ bin/ast_10x $output_dir/gaps.bed $bam1 $bam2 $bam3 ... >$output_dir/10x.bed 2>as
 ```
 **10x_trim** is available at [dfguan/utls](https://github.com/dfguan/utls).
 ## Bionano Processing
-Given a bionano files list *bnlist* (suppose in .cmap format) and the assembly *asm*, use the following command to get Bionano support regions.
+### Consensus map (.cmap)
+Given a bionano consensus map files list *bnlist* (suppose in .cmap format) and the assembly *asm*, use the following command to get Bionano support regions.
 
 ```
 
@@ -100,6 +101,10 @@ else
 	cp bionano_*.bed bn.bed
 fi
 ```
+
+### Molecular map (.bnx)
+
+Update soon
 
 ## HiC Processing 
 Given a HiC files list *hiclist* (suppose in fastq.gz format) and the assembly *asm*, use the following command to get Bionano support regions.
