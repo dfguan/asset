@@ -137,7 +137,7 @@ uint32_t get_target_end(uint32_t *cigar, int n_cigar, uint32_t s)
 
 
 /*bc_ary_t *proc_bam(char *srt_bam_fn, int min_as, int min_mq, uint32_t max_ins_len, sdict_t *ctgs, int opt)*/
-int proc_bam(char *bam_fn, int min_mq, uint32_t max_is, sdict_t *ctgs, sdict_t *bc_n, int opt, bc_ary_t *bc_l)
+int proc_bam(char *bam_fn, int min_mq, uint32_t max_is, sdict_t *ctgs, sdict_t *bc_n, int opt, bc_ary_t *bc_l, int use_lg)
 {
 	bamFile fp;
 	bam_header_t *h;
@@ -157,7 +157,8 @@ int proc_bam(char *bam_fn, int min_mq, uint32_t max_is, sdict_t *ctgs, sdict_t *
 		sd_put(ctgs, h->target_name[i], h->target_len[i]);
 		/*ctg_pos_push(d, i);*/
 
-	char *cur_qn = NULL, *cur_bc = NULL;
+	char *cur_qn = NULL;
+	char cur_bc[BC_LEN + 1] = {0};
 	/*int32_t cur_l = 0;*/
 	long bam_cnt = 0;
 	long rd_cnt = 0;
@@ -167,14 +168,26 @@ int proc_bam(char *bam_fn, int min_mq, uint32_t max_is, sdict_t *ctgs, sdict_t *
 	while (1) {
 		//segment were mapped 
 		if (bam_read1(fp, b) >= 0 ) {
+			++bam_cnt;
 			if (!cur_qn || strcmp(cur_qn, bam1_qname(b)) != 0) {
 				/*fprintf(stderr, "%d\t%d\t%d\n", aln_cnt, rev, aln.mq);*/
 				if (alns.n) col_bcnt(alns.a, alns.n, sd_put(bc_n, cur_bc, BC_LEN), min_mq, max_is, bc_l);
 				kv_reset(alns);
+				*cur_bc = 0;
 				if (cur_qn) free(cur_qn); 
 				cur_qn = strdup(bam1_qname(b));
-				cur_bc = cur_qn + b->core.l_qname - BC_LEN;
 				++rd_cnt;
+			}
+			//to deal with the case where read does not have a barcode
+			if (!*cur_bc) {
+				if (use_lg) {
+					uint8_t *_bc = bam_aux_get(b, "BX");
+					if (_bc) 
+						strncpy(cur_bc, _bc + 1, BC_LEN);
+					else 
+						continue;
+				} else 
+					strncpy(cur_bc, cur_qn + b->core.l_qname - BC_LEN, BC_LEN);
 			}
 			if ((b->core.flag & 0x4) || (b->core.flag & 0x80)) continue; //not aligned
 			aln.s = b->core.pos + 1;
@@ -182,7 +195,7 @@ int proc_bam(char *bam_fn, int min_mq, uint32_t max_is, sdict_t *ctgs, sdict_t *
 			aln.tid = b->core.tid;
 			kv_push(aln_inf_t, alns, aln);	
 			
-			if ((++bam_cnt % 1000000) == 0) fprintf(stderr, "[M::%s] processing %ld bams\n", __func__, bam_cnt); 
+			if ((bam_cnt % 1000000) == 0) fprintf(stderr, "[M::%s] processing %ld bams\n", __func__, bam_cnt); 
 		} else {
 			/*fprintf(stderr, "%d\t%d\t%d\n", aln_cnt, rev, aln.mq);*/
 			if (alns.n) col_bcnt(alns.a, alns.n, sd_put(bc_n, cur_bc, BC_LEN), min_mq, max_is, bc_l);
@@ -348,7 +361,7 @@ cord_t *col_cords(bc_ary_t *bc_l, uint32_t min_maq, uint32_t min_bc, uint32_t ma
 }
 
 /*int aa_10x(char *srt_bam_fn, int min_as, int min_mq, int min_cov, float min_cov_rat, int max_cov, float max_cov_rat)*/
-int aa_10x(char *bam_fn[], int n_bam, char *gap_fn, int min_mq, int min_cov, float min_cov_rat, uint32_t max_span, int max_cov, uint32_t max_is, int min_bc, int max_bc, uint32_t min_inner_bcn, uint32_t min_mol_len, int opt, char *out_dir)
+int aa_10x(char *bam_fn[], int n_bam, char *gap_fn, int min_mq, int min_cov, float min_cov_rat, uint32_t max_span, int max_cov, uint32_t max_is, int min_bc, int max_bc, uint32_t min_inner_bcn, uint32_t min_mol_len, int opt, int use_lg, char *out_dir)
 {
 	sdict_t *ctgs = sd_init();
 
@@ -359,7 +372,7 @@ int aa_10x(char *bam_fn[], int n_bam, char *gap_fn, int min_mq, int min_cov, flo
 	int i;
 	bc_ary_t *bc_l = calloc(1, sizeof(bc_ary_t));
 	for ( i = 0; i < n_bam; ++i) {
-		if (proc_bam(bam_fn[i], min_mq, max_is, ctgs, bc_n, opt, bc_l)) {
+		if (proc_bam(bam_fn[i], min_mq, max_is, ctgs, bc_n, opt, bc_l, use_lg)) {
 			return -1;	
 		}	
 	}	
@@ -429,10 +442,14 @@ int main(int argc, char *argv[])
 	float min_cov_rat = .15;
 	char *r;
 	char *out_dir = ".";
+	int use_lg = 0;
 		
 	int option = 0; //the way to calculate molecule length //internal parameters not allowed to adjust by users
-	while (~(c=getopt(argc, argv, "b:B:c:C:r:q:S:a:L:l:O:h"))) {
+	while (~(c=getopt(argc, argv, "b:B:c:C:r:q:S:a:L:l:O:xh"))) {
 		switch (c) {
+			case 'x':
+				use_lg = 1;
+				break;
 			case 'b': 
 				min_bc = strtol(optarg, &r, 10);
 				break;
@@ -471,6 +488,7 @@ int main(int argc, char *argv[])
 help:	
 				fprintf(stderr, "\nUsage: aa_10x [options] <GAP_BED> <BAM_FILEs> ...\n");
 				fprintf(stderr, "Options:\n");
+				fprintf(stderr, "         -x    BOOL     use longranger bam [False]\n");	
 				fprintf(stderr, "         -b    INT      minimum barcode number for each molecule [5]\n");	
 				fprintf(stderr, "         -B    INT      maximum barcode number for each molecule [inf]\n");
 				fprintf(stderr, "         -c    INT      minimum coverage [10]\n");
@@ -495,7 +513,7 @@ help:
 	char **bam_fn = argv+optind;
 	int n_bam = argc - optind;
 	fprintf(stderr, "Program starts\n");	
-	aa_10x(bam_fn, n_bam, gap_fn, min_mq, min_cov, min_cov_rat, max_span, max_cov, max_is, min_bc, max_bc, min_inner_bcn,  min_mol_len, option, out_dir);
+	aa_10x(bam_fn, n_bam, gap_fn, min_mq, min_cov, min_cov_rat, max_span, max_cov, max_is, min_bc, max_bc, min_inner_bcn,  min_mol_len, option,  use_lg, out_dir);
 	return 0;	
 }
 
