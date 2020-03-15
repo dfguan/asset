@@ -3,7 +3,7 @@ CFLAGS  =  -g -Wall -D VERBOSE -O2 -D PRINT_COVERAGE
 LDFLAGS = -lz -lm
 
 #OBJS = gfa.o opt.o paf.o sdict.o eg.o 
-PROG = ast_pb ast_10x ast_bion acc  pchlst detgaps ast_hic2 col_conts union_brks ast_bion_bnx split_fa 10x union # ast_postproc
+PROG = ast_pb ast_10x ast_bion acc  pchlst detgaps ast_hic2 col_conts union_brks ast_bion_bnx split_fa 10x union ast_hic pchlst0# ast_postproc
 
 .SUFFIXS:.c .o
 
@@ -25,8 +25,8 @@ col_conts: col_hic_lnks.o bamlite.o bed.o sdict.o cdict.o
 #hicbam2bed: hic_bam2bed.o bamlite.o bed.o sdict.o cdict.o 
 	#$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-#ast_hic: ast_hic.o ast.o sdict.o bamlite.o  bed.o
-	#$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+ast_hic: ast_hic.o ast.o sdict.o bamlite.o  bed.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 ast_hic2: ast_hic2.o sdict.o  bed.o cdict.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
@@ -72,6 +72,8 @@ union:union_beds.o sdict.o bed.o ast.o
 union_brks:union_brks.o sdict.o bed.o ast.o 
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 pchlst: gen_pchlst.o bed.o ast.o sdict.o bed.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+pchlst0: gen_pchlst0.o bed.o ast.o sdict.o bed.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 #ast_postproc: ast_postproc.o bed.o ast.o paf.o sdict.o 
 	#$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
