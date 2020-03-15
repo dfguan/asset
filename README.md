@@ -110,14 +110,16 @@ Update soon
 Given a HiC files list *hiclist* (suppose in fastq.gz format) and the assembly *asm*, use the following command to get Bionano support regions.
 
 ```
-bwa index $asm
+bin/split_fa $asm > split.fa
+samtools faidx split.fa 
+bwa index split.fa
 while read -r r1 r2
 do
 	prefix=`basename $r1 .fastq.gz`
-	bwa mem -SP -B10 -t12 $asm $prefix_1.fq.gz $prefix_2.fq.gz | samtools view -b - > $prefix.bam
-done < $10xlist
+	bwa mem -SP -B10 -t12 split.fa $prefix_1.fq.gz $prefix_2.fq.gz | samtools view -b - > $prefix.bam
+done < $hiclist
 bin/col_conts *.bam > $output_dir/links.mat
-bin/ast_hic $asm.fai $output_dir/links.mat >$output_dir/hic2.bed 2>ast_hic.log
+bin/ast_hic2 split.fa.fai $output_dir/links.mat >$output_dir/hic2.bed 2>ast_hic.log
 
 ```
 
