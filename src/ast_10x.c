@@ -361,7 +361,7 @@ cord_t *col_cords(bc_ary_t *bc_l, uint32_t min_maq, uint32_t min_bc, uint32_t ma
 }
 
 /*int aa_10x(char *srt_bam_fn, int min_as, int min_mq, int min_cov, float min_cov_rat, int max_cov, float max_cov_rat)*/
-int aa_10x(char *bam_fn[], int n_bam, char *gap_fn, int min_mq, int min_cov, float min_cov_rat, uint32_t max_span, int max_cov, uint32_t max_is, int min_bc, int max_bc, uint32_t min_inner_bcn, uint32_t min_mol_len, int opt, int use_lg, char *out_dir)
+int aa_10x(char *bam_fn[], int n_bam, char *gap_fn, int min_mq, int min_cov, float min_cov_rat, float max_cov_rat, uint32_t max_span, int max_cov, uint32_t max_is, int min_bc, int max_bc, uint32_t min_inner_bcn, uint32_t min_mol_len, int opt, int use_lg, char *out_dir)
 {
 	sdict_t *ctgs = sd_init();
 
@@ -417,6 +417,7 @@ int aa_10x(char *bam_fn[], int n_bam, char *gap_fn, int min_mq, int min_cov, flo
 	print_coverage_stat(ca, ctgs, type, out_dir);
 	print_base_coverage(ca, ctgs, type, out_dir);
 #endif	
+	/*sel_sup_reg_dyn(ca,  min_cov_rat, max_cov_rat, min_cov, max_cov, ctgs, type, desc);*/
 	sel_sup_reg_dyn(ca,  min_cov_rat, min_cov, max_cov, ctgs, type, desc);
 		
 #ifdef VERBOSE
@@ -439,49 +440,52 @@ int main(int argc, char *argv[])
 	int min_as = 0;
 	uint32_t max_span = 20000, min_inner_bcn = 5, min_mol_len = 1000;
 	uint32_t min_bc = 20, max_bc = 1000000, max_is=1000;
-	float min_cov_rat = .15;
+	float min_cov_rat = .15, max_cov_rat = 3.5;
 	char *r;
 	char *out_dir = ".";
 	int use_lg = 0;
 		
 	int option = 0; //the way to calculate molecule length //internal parameters not allowed to adjust by users
-	while (~(c=getopt(argc, argv, "b:B:c:C:r:q:S:a:L:l:O:xh"))) {
+	while (~(c=getopt(argc, argv, "b:B:c:C:r:R:q:S:a:L:l:O:xh"))) {
 		switch (c) {
 			case 'x':
 				use_lg = 1;
 				break;
 			case 'b': 
-				min_bc = strtol(optarg, &r, 10);
+				min_bc = strtol(optarg, &r, 10); // default: 20
 				break;
 			case 'B':
-				max_bc = strtol(optarg, &r, 10);
+				max_bc = strtol(optarg, &r, 10); //default: 1M
 				break;
 			case 'c':
-				min_cov = atoi(optarg); 
+				min_cov = atoi(optarg); //default : 10
 				break;
 			case 'r':
-				min_cov_rat = atof(optarg); 
+				min_cov_rat = atof(optarg); //default .15
+				break;
+			case 'R':
+				max_cov_rat = atof(optarg); //default: 3.5
 				break;
 			case 'C':
-				max_cov = atoi(optarg); 
+				max_cov = atoi(optarg); //default: 1M
 				break;
 			case 'q':
-				min_mq = atoi(optarg);
+				min_mq = atoi(optarg);//default: 20
 				break;
 			case 'L':
-				max_is = strtol(optarg, &r, 10);
+				max_is = strtol(optarg, &r, 10); //default: 1000
 				break;
 			case 'S':
-				max_span = strtol(optarg, &r, 10);
+				max_span = strtol(optarg, &r, 10); //default: 20kb
 				break;
 			case 'a':
-				min_inner_bcn = strtol(optarg, &r, 10);
+				min_inner_bcn = strtol(optarg, &r, 10); //default: 5 
 				break;
 			case 'l':
-				min_mol_len = strtol(optarg, &r, 10);
+				min_mol_len = strtol(optarg, &r, 10); //default: 1000
 				break;
 			case 'O':
-				out_dir = optarg;
+				out_dir = optarg; 
 				break;
 			default:
 				if (c != 'h') fprintf(stderr, "[E::%s] undefined option %c\n", __func__, c);
@@ -489,17 +493,18 @@ help:
 				fprintf(stderr, "\nUsage: aa_10x [options] <GAP_BED> <BAM_FILEs> ...\n");
 				fprintf(stderr, "Options:\n");
 				fprintf(stderr, "         -x    BOOL     use longranger bam [False]\n");	
-				fprintf(stderr, "         -b    INT      minimum barcode number for each molecule [5]\n");	
-				fprintf(stderr, "         -B    INT      maximum barcode number for each molecule [inf]\n");
+				fprintf(stderr, "         -b    INT      minimum read number for each barcode [20]\n");	
+				fprintf(stderr, "         -B    INT      maximum read number for each barcode [inf]\n");
 				fprintf(stderr, "         -c    INT      minimum coverage [10]\n");
-				fprintf(stderr, "         -r    FLOAT    minimum coverage ratio [.5]\n");
+				fprintf(stderr, "         -r    FLOAT    minimum coverage ratio [.15]\n");
 				fprintf(stderr, "         -C    INT      maximum coverage [inf]\n");
-				fprintf(stderr, "         -q    INT      minimum average mapping quality for each molecule [%d]\n", MIN_MAQ);
+				/*fprintf(stderr, "         -R    INT      maximum coverage ratio [inf]\n");*/
+				fprintf(stderr, "         -q    INT      minimum average mapping quality for each molecule [%d]\n", 20);
 				/*fprintf(stderr, "         -S    INT      minimum aislignment score [0]\n");*/
 				fprintf(stderr, "         -l    INT      minimum molecule length [1000]\n");
 				fprintf(stderr, "         -S    INT      maximum spanning length [20000]\n");
 				/*fprintf(stderr, "         -L    INT      maximum insertion length [1000]\n");*/
-				fprintf(stderr, "         -a    INT      minimum barcode for contig [5]\n");
+				fprintf(stderr, "         -a    INT      minimum barcode for each molecule [5]\n");
 				fprintf(stderr, "         -h             help\n");
 				return 1;	
 		}		
@@ -513,7 +518,7 @@ help:
 	char **bam_fn = argv+optind;
 	int n_bam = argc - optind;
 	fprintf(stderr, "Program starts\n");	
-	aa_10x(bam_fn, n_bam, gap_fn, min_mq, min_cov, min_cov_rat, max_span, max_cov, max_is, min_bc, max_bc, min_inner_bcn,  min_mol_len, option,  use_lg, out_dir);
+	aa_10x(bam_fn, n_bam, gap_fn, min_mq, min_cov, min_cov_rat, max_cov_rat, max_span, max_cov, max_is, min_bc, max_bc, min_inner_bcn,  min_mol_len, option,  use_lg, out_dir);
 	return 0;	
 }
 

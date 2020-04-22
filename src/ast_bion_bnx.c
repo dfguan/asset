@@ -578,7 +578,7 @@ help:
 				fprintf(stderr, "Options:\n");
 				fprintf(stderr, "         -m    INT       minimum coverage [10]\n");
 				fprintf(stderr, "         -M    INT       maximum coverage [inf]\n");
-				fprintf(stderr, "         -r    INT       minimum coverage ratio [.15]\n");
+				fprintf(stderr, "         -r    INT       minimum coverage ratio [.5]\n");
 				fprintf(stderr, "         -s    FLOAT     minimum alignment confidence [0.0]\n");
 				fprintf(stderr, "         -O    STR       output directory [.]\n");
 				fprintf(stderr, "         -h             help\n");

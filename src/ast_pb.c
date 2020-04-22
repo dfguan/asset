@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int max_cov = 400, min_cov = 10;
-	int min_mq = 30;
+	int min_mq = 30; // not being used
 	uint32_t flank = 300;	
 	char *out_dir = ".";
 	while (~(c=getopt(argc, argv, "O:M:m:l:h"))) {
