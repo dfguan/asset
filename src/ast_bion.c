@@ -414,6 +414,9 @@ int main(int argc, char *argv[])
 {
 	int c;
 	float  min_cov = 3, min_conf = 0;
+	
+	char *program;
+   	(program = strrchr(argv[0], '/')) ? ++program : (program = argv[0]);
 	while (~(c=getopt(argc, argv, "c:s:h"))) {
 		switch (c) {
 			case 'c':
@@ -425,7 +428,7 @@ int main(int argc, char *argv[])
 			default:
 				if (c != 'h') fprintf(stderr, "[E::%s] undefined option %c\n", __func__, c);
 help:	
-				fprintf(stderr, "\nUsage: aa_bion [options] <REF_CMAP> <QUERY_CMAP> <XMAP> <KEY_FN>\n");
+				fprintf(stderr, "\nUsage: %s [options] <REF_CMAP> <QUERY_CMAP> <XMAP> <KEY_FN>\n", program);
 				fprintf(stderr, "Options:\n");
 				fprintf(stderr, "         -c    FLOAT      minimum coverage [3.0]\n");
 				fprintf(stderr, "         -s    FLOAT      minimum alignment confidence [0.0]\n");

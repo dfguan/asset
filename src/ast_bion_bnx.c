@@ -554,6 +554,9 @@ int main(int argc, char *argv[])
 	int  min_cov = 10, max_cov = 1000000;
    	float min_conf = 0, min_cov_rat = .5;
 	char *out_dir = ".";
+	
+	char *program;
+   	(program = strrchr(argv[0], '/')) ? ++program : (program = argv[0]);
 	while (~(c=getopt(argc, argv, "m:M:s:r:O:h"))) {
 		switch (c) {
 			case 'm':
@@ -574,14 +577,14 @@ int main(int argc, char *argv[])
 			default:
 				if (c != 'h') fprintf(stderr, "[E::%s] undefined option %c\n", __func__, c);
 help:	
-				fprintf(stderr, "\nUsage: aa_bion [options] <REF_CMAP> <QUERY_CMAP> <XMAP> <KEY_FN>\n");
+				fprintf(stderr, "\nUsage: %s [options] <REF_CMAP> <QUERY_CMAP> <XMAP> <KEY_FN>\n", program);
 				fprintf(stderr, "Options:\n");
 				fprintf(stderr, "         -m    INT       minimum coverage [10]\n");
 				fprintf(stderr, "         -M    INT       maximum coverage [inf]\n");
 				fprintf(stderr, "         -r    INT       minimum coverage ratio [.5]\n");
 				fprintf(stderr, "         -s    FLOAT     minimum alignment confidence [0.0]\n");
 				fprintf(stderr, "         -O    STR       output directory [.]\n");
-				fprintf(stderr, "         -h             help\n");
+				fprintf(stderr, "         -h              help\n");
 				return 1;	
 		}		
 	}

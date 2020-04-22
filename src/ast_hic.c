@@ -475,6 +475,8 @@ int main(int argc, char *argv[])
 	/*int min_as = 0;*/
 	/*uint32_t max_ins_len = 10000;*/
 
+	char *program;
+   	(program = strrchr(argv[0], '/')) ? ++program : (program = argv[0]);
 	char *r;
 	char *out_dir = ".";
 	while (~(c=getopt(argc, argv, "c:C:q:s:L:O:h"))) {
@@ -497,7 +499,7 @@ int main(int argc, char *argv[])
 			default:
 				if (c != 'h') fprintf(stderr, "[E::%s] undefined option %c\n", __func__, c);
 help:	
-				fprintf(stderr, "\nUsage: aa_hic [options] <GAP_BED> <BAM_FILEs>\n");
+				fprintf(stderr, "\nUsage: %s [options] <GAP_BED> <BAM_FILEs>\n", program);
 				fprintf(stderr, "Options:\n");
 				fprintf(stderr, "         -c    INT      minimum coverage [7]\n");
 				fprintf(stderr, "         -C    INT      maximum coverage [inf]\n");

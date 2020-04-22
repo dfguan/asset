@@ -945,7 +945,9 @@ fprintf(stderr, "[M::%s] collecting contigs from faidx file\n", __func__);
 int main(int argc, char *argv[])
 {
 	int c;
-	uint32_t min_wt = 5; char *program = argv[0];
+	uint32_t min_wt = 5; 
+	char *program;
+   	(program = strrchr(argv[0], '/')) ? ++program : (program = argv[0]);
 	char *ctg_fn = 0, *out_fn = 0;
 	int use_sat = 0;
 	while (~(c=getopt(argc, argv, "w:o:s:c:h"))) {

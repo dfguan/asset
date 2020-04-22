@@ -445,6 +445,8 @@ int main(int argc, char *argv[])
 	char *out_dir = ".";
 	int use_lg = 0;
 		
+	char *program;
+   	(program = strrchr(argv[0], '/')) ? ++program : (program = argv[0]);
 	int option = 0; //the way to calculate molecule length //internal parameters not allowed to adjust by users
 	while (~(c=getopt(argc, argv, "b:B:c:C:r:R:q:S:a:L:l:O:xh"))) {
 		switch (c) {
@@ -490,7 +492,7 @@ int main(int argc, char *argv[])
 			default:
 				if (c != 'h') fprintf(stderr, "[E::%s] undefined option %c\n", __func__, c);
 help:	
-				fprintf(stderr, "\nUsage: aa_10x [options] <GAP_BED> <BAM_FILEs> ...\n");
+				fprintf(stderr, "\nUsage: %s [options] <GAP_BED> <BAM_FILEs> ...\n", program);
 				fprintf(stderr, "Options:\n");
 				fprintf(stderr, "         -x    BOOL     use longranger bam [False]\n");	
 				fprintf(stderr, "         -b    INT      minimum read number for each barcode [20]\n");	

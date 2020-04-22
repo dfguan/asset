@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <string.h>
 
 #include "paf.h"
 #include "ast.h"
@@ -121,6 +122,9 @@ int main(int argc, char *argv[])
 	int min_mq = 30; // not being used
 	uint32_t flank = 300;	
 	char *out_dir = ".";
+	
+	char *program;
+   	(program = strrchr(argv[0], '/')) ? ++program : (program = argv[0]);
 	while (~(c=getopt(argc, argv, "O:M:m:l:h"))) {
 		switch (c) {
 			case 'M': 
@@ -141,7 +145,7 @@ int main(int argc, char *argv[])
 			default:
 				if (c != 'h') fprintf(stderr, "[E::%s] undefined option %c\n", __func__, c);
 help:	
-				fprintf(stderr, "\nUsage: aa_pb [options] <PAF_FILE> ...\n");
+				fprintf(stderr, "\nUsage: %s [options] <PAF_FILE> ...\n", program);
 				fprintf(stderr, "Options:\n");	
 				fprintf(stderr, "         -m    INT      minimum coverage [10]\n");	
 				fprintf(stderr, "         -M    INT      maximum coverage [400]\n");
