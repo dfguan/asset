@@ -557,12 +557,12 @@ int main(int argc, char *argv[])
 	
 	char *program;
    	(program = strrchr(argv[0], '/')) ? ++program : (program = argv[0]);
-	while (~(c=getopt(argc, argv, "m:M:s:r:O:h"))) {
+	while (~(c=getopt(argc, argv, "c:C:s:r:O:h"))) {
 		switch (c) {
-			case 'm':
+			case 'c':
 				min_cov = atoi(optarg); 
 				break;
-			case 'M':
+			case 'C':
 				max_cov = atoi(optarg); 
 				break;
 			case 's':
@@ -579,9 +579,9 @@ int main(int argc, char *argv[])
 help:	
 				fprintf(stderr, "\nUsage: %s [options] <REF_CMAP> <QUERY_CMAP> <XMAP> <KEY_FN>\n", program);
 				fprintf(stderr, "Options:\n");
-				fprintf(stderr, "         -m    INT       minimum coverage [10]\n");
-				fprintf(stderr, "         -M    INT       maximum coverage [inf]\n");
-				fprintf(stderr, "         -r    INT       minimum coverage ratio [.5]\n");
+				fprintf(stderr, "         -c    INT       minimum coverage [10]\n");
+				fprintf(stderr, "         -r    FLOAT     minimum coverage ratio [.5]\n");
+				fprintf(stderr, "         -C    INT       maximum coverage [inf]\n");
 				fprintf(stderr, "         -s    FLOAT     minimum alignment confidence [0.0]\n");
 				fprintf(stderr, "         -O    STR       output directory [.]\n");
 				fprintf(stderr, "         -h              help\n");

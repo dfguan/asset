@@ -91,7 +91,7 @@ int cord_merge(cord_t *c, int n);
 void cord_destroy(cord_t *c, int n);
 void print_coverage(cov_ary_t *ca, sdict_t* ctgs, char *tp);
 void print_coverage_wig(cov_ary_t *ca, sdict_t* ctgs, char *tp, uint32_t ws, char *out_dir);
-void sel_sup_reg(cov_ary_t *ca, int min_cov, int max_cov, sdict_t* ctgs, char *tp, char *desc);
+void sel_sup_reg(cov_ary_t *ca, int min_cov, int max_cov, float min_cov_rat, float max_cov_rat, int use_slim, sdict_t* ctgs, char *tp, char *desc);
 cov_ary_t *cal_cov(ctg_pos_t *d, sdict_t* ctgs, float *avgc);
 
 void sel_sup_reg_dyn(cov_ary_t *ca, float min_cov_rat, int min_cov, int max_cov, sdict_t* ctgs, char *tp, char *desc);

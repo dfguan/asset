@@ -434,20 +434,22 @@ void sel_sup_reg_dyn(cov_ary_t *ca, float min_cov_rat, int min_cov, int max_cov,
 }
 
 // one-based, fully closed coordinates
-void sel_sup_reg(cov_ary_t *ca, int min_cov, int max_cov, sdict_t* ctgs, char *tp, char *desc)
+void sel_sup_reg(cov_ary_t *ca, int min_cov, int max_cov, float min_cov_rat, float max_cov_rat, int use_slim, sdict_t* ctgs, char *tp, char *desc)
 {
 	//print a header 
 	fprintf(stdout, "track name=\"%s\" description=\"%s\"\n", tp,desc);	
-
+	
 	/*FILE *fp_cvg = fopen()*/
 	int i, j;
 	for ( i = 0; i < ctgs->n_seq; ++i) {
 		if (ca[i].n) {
-			/*int set_cov = ca[i].tot_cov/ctgs[i].seq->len;	*/
 			int set_min_cov = min_cov;
 			int set_max_cov = max_cov;
-			/*int set_min_cov = min(min_cov_rat *set_cov, min_cov);*/
-			/*int set_max_cov = max(max_cov_rat * set_cov, max_cov);*/
+			if (use_slim) {
+				int set_cov = ca[i].tot_cov/ctgs[i].seq->len;	
+				set_min_cov = max(min_cov_rat *set_cov, min_cov);
+				set_max_cov = min(max_cov_rat * set_cov, max_cov);
+			} 			
 			uint32_t pe, ps; 
 			uint8_t is_set = 0;
 			for (j = 0; j < ca[i].n; ++j)  {

@@ -432,7 +432,7 @@ help:
 				fprintf(stderr, "Options:\n");
 				fprintf(stderr, "         -c    FLOAT      minimum coverage [3.0]\n");
 				fprintf(stderr, "         -s    FLOAT      minimum alignment confidence [0.0]\n");
-				fprintf(stderr, "         -h             help\n");
+				fprintf(stderr, "         -h               help\n");
 				return 1;	
 		}		
 	}

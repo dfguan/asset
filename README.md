@@ -1,3 +1,71 @@
+<hr>
+<h1 align="center", style="color:red;">Bullitin</h1>
+<hr>
+<ol>
+<li>UI modifications</li>
+<table>
+  <tr>
+    <th>Program</th>
+    <th>Operation</th>
+    <th>Old</th>
+    <th>New</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>ast_bion_bnx</td>
+    <td>Update</td>
+    <td>m</td>
+    <td>c</td>
+    <td>minimum coverage</td>
+  </tr>
+    <tr>
+    <td>ast_bion_bnx</td>
+    <td>Update</td>
+    <td>M</td>
+    <td>C</td>
+    <td>maximum coverage</td>
+  </tr>
+   <td>ast_pb</td>
+    <td>Update</td>
+    <td>m</td>
+    <td>c</td>
+    <td>minimum coverage</td>
+  </tr>
+   <td>ast_pb</td>
+    <td>Update</td>
+    <td>M</td>
+    <td>C</td>
+    <td>minimum coverage</td>
+  </tr>
+    </tr>
+   <td>ast_pb</td>
+    <td>Add</td>
+    <td></td>
+    <td>r</td>
+    <td>minimum coverage ratio</td>
+  </tr>
+      </tr>
+   <td>ast_pb</td>
+    <td>Add</td>
+    <td></td>
+    <td>R</td>
+    <td>maximum coverage ratio</td>
+  </tr>
+    </tr>
+   <td>ast_pb</td>
+    <td>Add</td>
+    <td></td>
+    <td>s</td>
+    <td>use soft limit</td>
+  </tr>
+</table>
+<li>New functions</li>
+<ul>
+<li>ast_pb supports soft limits now. the lower coverage bound for a contig/scaffold is calculated by max(min_ratio * ave, min_cov), and the upper bound is min(max_ratio * ave, max_cov), where <b>ave</b> is the average coverage for the contig/scaffold. 
+</ul>
+</ol>
+<hr>
+
 # Asset
 Assembly evaluation tool
 
@@ -139,4 +207,4 @@ bin/union_brks $output_dir/gaps.bed $output_dir/pchlst_{ctg,scaf}.bed > $output_
 ```
 
 ## Contact
-Wellcome to use, you can use github webpage to report an issue or email me dfguan9@gmail.com with any advice.
+jWellcome to use, you can use github webpage to report an issue or email me dfguan9@gmail.com with any advice.

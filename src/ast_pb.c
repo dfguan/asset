@@ -66,7 +66,7 @@ int col_pos(char *paf_fn, int min_mq, float min_mlr,  sdict_t *ctgs, uint32_t fl
 
 
 /*int aa_pb(char *paf_fn, int min_cov, float min_cov_rat, int max_cov, float max_cov_rat, int min_mq, int min_as, uint32_t )*/
-int aa_pb(char *paf_fn[], int n_paf, int min_cov, int max_cov, int min_mq, uint32_t flank, char *out_dir)
+int aa_pb(char *paf_fn[], int n_paf, int min_cov, float min_cov_rat, int max_cov, float max_cov_rat, int use_slim, int min_mq, uint32_t flank, char *out_dir)
 {
 	sdict_t *ctgs = sd_init();	
 #ifdef VERBOSE
@@ -106,7 +106,7 @@ int aa_pb(char *paf_fn[], int n_paf, int min_cov, int max_cov, int min_mq, uint3
 	print_coverage_wig(ca, ctgs, "pb", 1024, out_dir);
 #endif	
 	
-	sel_sup_reg(ca,  min_cov, max_cov, ctgs, type, desc);
+	sel_sup_reg(ca,  min_cov,  max_cov,min_cov_rat, max_cov_rat, use_slim, ctgs, type, desc);
 
 	cov_ary_destroy(ca, ctgs->n_seq); //a little bit messy
 	sd_destroy(ctgs);
@@ -119,19 +119,23 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int max_cov = 400, min_cov = 10;
+	float max_cov_rat = 2.5, min_cov_rat = 0.25;
 	int min_mq = 30; // not being used
 	uint32_t flank = 300;	
 	char *out_dir = ".";
-	
+	int use_slim = 1;	
 	char *program;
    	(program = strrchr(argv[0], '/')) ? ++program : (program = argv[0]);
-	while (~(c=getopt(argc, argv, "O:M:m:l:h"))) {
+	while (~(c=getopt(argc, argv, "O:c:C:M:m:l:sh"))) {
 		switch (c) {
-			case 'M': 
+			case 'C': 
 				max_cov = atoi(optarg);
 				break;
-			case 'm':
+			case 'c':
 				min_cov = atoi(optarg);
+				break;
+			case 's':
+				use_slim = 0; 
 				break;
 			case 'l':
 				flank = atoi(optarg); 
@@ -147,8 +151,11 @@ int main(int argc, char *argv[])
 help:	
 				fprintf(stderr, "\nUsage: %s [options] <PAF_FILE> ...\n", program);
 				fprintf(stderr, "Options:\n");	
-				fprintf(stderr, "         -m    INT      minimum coverage [10]\n");	
-				fprintf(stderr, "         -M    INT      maximum coverage [400]\n");
+				fprintf(stderr, "         -c    INT      minimum coverage [10]\n");	
+				fprintf(stderr, "         -r    FLOAT    minimum coverage ratio [0.25]\n");
+				fprintf(stderr, "         -C    INT      maximum coverage [400]\n");
+				fprintf(stderr, "         -R    FLOAT    maximum coverage ratio [2.5]\n");
+				fprintf(stderr, "         -s    BOOL     use soft limit [True]\n");
 				/*fprintf(stderr, "         -q    INT      minimum mapping quality [0]\n");	*/
 				fprintf(stderr, "         -l    INT      flanking space [300]\n");
 				fprintf(stderr, "         -h             help\n");
@@ -161,7 +168,7 @@ help:
 	char **paf_fn = argv+optind;
 	int n_paf = argc - optind;
 	fprintf(stderr, "Program starts\n");	
-	aa_pb(paf_fn, n_paf, min_cov, max_cov, min_mq, flank, out_dir);
+	aa_pb(paf_fn, n_paf, min_cov, min_cov_rat, max_cov, max_cov_rat, use_slim, min_mq, flank, out_dir);
 	return 0;	
 
 
