@@ -118,7 +118,7 @@ int aa_pb(char *paf_fn[], int n_paf, int min_cov, float min_cov_rat, int max_cov
 int main(int argc, char *argv[])
 {
 	int c;
-	int max_cov = 400, min_cov = 10;
+	int max_cov = 150, min_cov = 10;
 	float max_cov_rat = 2.5, min_cov_rat = 0.25;
 	int min_mq = 30; // not being used
 	uint32_t flank = 300;	
