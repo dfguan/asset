@@ -446,7 +446,7 @@ void sel_sup_reg(cov_ary_t *ca, int min_cov, int max_cov, float min_cov_rat, flo
 			int set_min_cov = min_cov;
 			int set_max_cov = max_cov;
 			if (use_slim) {
-				int set_cov = ca[i].tot_cov/ctgs[i].seq->len;	
+				int set_cov = ca[i].tot_cov/ctgs->seq[i].len;	
 				set_min_cov = max(min_cov_rat *set_cov, min_cov);
 				set_max_cov = min(max_cov_rat * set_cov, max_cov);
 			} 			
