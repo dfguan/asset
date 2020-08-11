@@ -87,8 +87,8 @@ int aa_pb(char *paf_fn[], int n_paf, int min_cov, float min_cov_rat, int max_cov
 #ifdef VERBOSE
 	fprintf(stderr, "[M::%s] calculating coverage for each base on genome\n", __func__);
 #endif
-	float tmp;
-	cov_ary_t *ca = cal_cov(d, ctgs, &tmp);
+	float avgc;
+	cov_ary_t *ca = cal_cov(d, ctgs, &avgc);
 
 	ctg_pos_destroy(d);
 	if (!ca) {
@@ -106,7 +106,7 @@ int aa_pb(char *paf_fn[], int n_paf, int min_cov, float min_cov_rat, int max_cov
 	print_coverage_wig(ca, ctgs, "pb", 1024, out_dir);
 #endif	
 	
-	sel_sup_reg(ca,  min_cov,  max_cov,min_cov_rat, max_cov_rat, use_slim, ctgs, type, desc);
+	sel_sup_reg(ca,  min_cov,  max_cov, avgc, min_cov_rat, max_cov_rat, use_slim, ctgs, type, desc);
 
 	cov_ary_destroy(ca, ctgs->n_seq); //a little bit messy
 	sd_destroy(ctgs);

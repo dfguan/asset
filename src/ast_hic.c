@@ -455,7 +455,7 @@ int aa_hic(char **bam_fn, int n_bam, char *gap_fn, int min_mq, int min_cov, int 
 	print_coverage_stat(ca, ctgs, type, out_dir);
 	print_base_coverage(ca, ctgs, type, out_dir);
 #endif	
-	sel_sup_reg(ca, min_cov, max_cov, 0, 0.0, 0.0, ctgs, type, desc);
+	sel_sup_reg(ca, min_cov, max_cov,  0.0, 0.0, 0.0, 0, ctgs, type, desc);
 		
 	cov_ary_destroy(ca, ctgs->n_seq); //a little bit messy
 	sd_destroy(ctgs);
