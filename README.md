@@ -23,7 +23,7 @@ Asset can use sequencing data from four platforms (Pacbio, 10X, Bionano, HiC) to
 git clone https://github.com/dfguan/asset.git
 cd asset/src && make
 ```
-There will be bin direcotory keeping all asset executables under asset after compiling successfully.
+There will be bin directory keeping all asset executables under asset after compiling successfully.
 
 # <a name="pg"> Pipeline Guide </a>
 ## Preprocessing
@@ -139,4 +139,4 @@ bin/union_brks $output_dir/gaps.bed $output_dir/pchlst_{ctg,scaf}.bed > $output_
 ```
 
 ## Contact
-Wellcome to use, you can use github webpage to report an issue or email me dfguan9@gmail.com with any advice.
+Welcome to use, you can use github webpage to report an issue or email me dfguan9@gmail.com with any advice.
