@@ -489,7 +489,8 @@ def acc(man, ref, out_dir, bin_dir, spid):
     jerr = "{0}/acc_contig_{1}.e".format(out_dir, spid)
     j = hpc("lsf", cmd=jcmd, core=1, mem = 20000, jn=jjn, out=jout, err=jerr)
     man.start([j], True)
-
+	
+	beds = []
     for fn in ["10x.bed", "hic2.bed", "bn.bed"]:
         fpath = "{0}/{1}".format(out_dir,fn)
         if checkf(fpath):
