@@ -560,7 +560,7 @@ uint32_t *find_breaks6(cdict2_t *cds, sdict_t *ctgs, uint32_t *n_brks)
 
 
 
-uint32_t *find_breaks7(cdict2_t *cds, sdict_t *ctgs, uint32_t *n_brks)
+uint32_t *find_breaks7(cdict2_t *cds, sdict_t *ctgs, uint32_t *n_brks, int tol)
 {
     uint32_t n_cds = ctgs->n_seq;
 	uint32_t i;
@@ -649,7 +649,7 @@ uint32_t *find_breaks7(cdict2_t *cds, sdict_t *ctgs, uint32_t *n_brks)
 		
         if (susp_hd != 0xFFFFFFFF) {
             int insert = 1;
-            for (j = susp_hd + 1; j < susp_hd + 2 && j < c->n_cnt; ++j) {
+            for (j = susp_hd + 1; j <= susp_hd + tol && j < c->n_cnt; ++j) {
                 uint32_t sum = 0;
                 for ( z = 0; z < 4; ++z) sum += c->cnts[j].cnt[z]; 
                 uint32_t ctg_idx2 = sd_get(ctgs, c->cnts[j].name);
@@ -671,7 +671,7 @@ uint32_t *find_breaks7(cdict2_t *cds, sdict_t *ctgs, uint32_t *n_brks)
         }
         if (susp_tl != 0xFFFFFFFF) {
             int insert = 1;
-            for (j = susp_tl + 1; j < susp_tl + 2 && j < c->n_cnt; ++j) {
+            for (j = susp_tl + 1; j <= susp_tl + tol && j < c->n_cnt; ++j) {
                 uint32_t sum = 0;
                 for ( z = 0; z < 4; ++z) sum += c->cnts[j].cnt[z]; 
                 uint32_t ctg_idx2 = sd_get(ctgs, c->cnts[j].name);
@@ -881,7 +881,7 @@ int sel_supt_reg(uint32_t *brks, uint32_t n_brks, sdict_t *ctgs)
     return 0;
 }
 
-int ast_hic(char *fn, char *edge_fn, int min_wt, int use_sat, char *out_fn)
+int ast_hic(char *fn, char *edge_fn, int min_wt, int use_sat, char *out_fn, int tol)
 {
 	sdict_t *ctgs = 0;
     if (!fn) {
@@ -921,7 +921,7 @@ fprintf(stderr, "[M::%s] collecting contigs from faidx file\n", __func__);
 	fprintf(stderr, "[M::%s] find breaks\n", __func__);
 #endif
     uint32_t n_brks;
-    uint32_t *brks = find_breaks7(cds, ctgs, &n_brks);
+    uint32_t *brks = find_breaks7(cds, ctgs, &n_brks, tol);
 #ifdef VERBOSE
 	fprintf(stderr, "[M::%s] output support regions\n", __func__);
 #endif
@@ -949,8 +949,8 @@ int main(int argc, char *argv[])
 	char *program;
    	(program = strrchr(argv[0], '/')) ? ++program : (program = argv[0]);
 	char *ctg_fn = 0, *out_fn = 0;
-	int use_sat = 0;
-	while (~(c=getopt(argc, argv, "w:o:s:c:h"))) {
+	int use_sat = 0, tol = 1;
+	while (~(c=getopt(argc, argv, "w:o:s:n:c:h"))) {
 		switch (c) {
 			case 'w': 
 				min_wt = atoi(optarg);
@@ -961,12 +961,16 @@ int main(int argc, char *argv[])
 			case 'o': 
 				out_fn = optarg;
 				break;
+			case 'n': 
+				tol = atoi(optarg);
+				break;
 			default:
 				if (c != 'h') fprintf(stderr, "[E::%s] undefined option %c\n", __func__, c);
 help:	
 				fprintf(stderr, "\nUsage: %s [<options>] <REF_FAI> <LINKS_MATRIX> \n", program);
 				fprintf(stderr, "Options:\n");
 				fprintf(stderr, "         -w    INT      minimum weight for links [5]\n");
+				fprintf(stderr, "         -n    FILE     the nearest N neighbors [1]\n");
 				fprintf(stderr, "         -s    FILE     sat file [nul]\n");
 				fprintf(stderr, "         -o    FILE     output file [stdout]\n");
 				fprintf(stderr, "         -h             help\n");
@@ -980,7 +984,7 @@ help:
 	char *lnk_fn = argv[optind];
 	fprintf(stderr, "Program starts\n");	
 	int ret;
-	ret = ast_hic(sat_fn, lnk_fn, min_wt, 0, out_fn);
+	ret = ast_hic(sat_fn, lnk_fn, min_wt, 0, out_fn, tol);
 
 	fprintf(stderr, "Program ends\n");	
 	return ret;	
