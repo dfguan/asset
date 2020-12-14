@@ -315,7 +315,7 @@ int proc_bam(char *bam_fn, int min_mq, uint32_t max_ins_len, sdict_t *ctgs, se_a
 			tmp.e = tmp.s + b->core.isize - 1;//fully closed	
 			kv_push(aln_inf_t, all, tmp);	
 			uint32_t *cigar = bam1_cigar(b);
-			if ((tmp.rev && bam_cigar_op(cigar[0]) == BAM_CMATCH)|| (!tmp.rev && bam_cigar_op(cigar[b->core.n_cigar - 1]) == BAM_CMATCH))	
+			if ((!tmp.rev && bam_cigar_op(cigar[0]) == BAM_CMATCH)|| (tmp.rev && bam_cigar_op(cigar[b->core.n_cigar - 1]) == BAM_CMATCH))	
 			kv_push(aln_inf_t, five, tmp);
 				/*} */
 			if ((++rdp_counter % 1000000) == 0) fprintf(stderr, "[M::%s] processing %lld read pairs\n", __func__, rdp_counter); 
