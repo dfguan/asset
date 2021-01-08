@@ -115,8 +115,9 @@ samtools faidx split.fa
 bwa index split.fa
 while read -r r1 r2
 do
-	prefix=`basename $r1 .fastq.gz`
-	bwa mem -SP -B10 -t12 split.fa $prefix_1.fq.gz $prefix_2.fq.gz | samtools view -b - > $prefix.bam
+	prefix=`basename $r1 .fq.gz`
+	dirn=`dirname $r1`
+	bwa mem -SP -B10 -t12 split.fa $r1 $r2 | samtools view -b - > $dirn/$prefix.bam
 done < $hiclist
 bin/col_conts *.bam > $output_dir/links.mat
 bin/ast_hic2 split.fa.fai $output_dir/links.mat >$output_dir/hic2.bed 2>ast_hic.log
