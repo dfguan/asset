@@ -229,12 +229,12 @@ void print_base_coverage(cov_ary_t *ca, sdict_t* ctgs, char *tp, char *out_dir)
 
 void print_coverage_stat(cov_ary_t *ca, sdict_t* ctgs, char *tp, char *out_dir)
 {
-	char *wigname = malloc(strlen(tp) + strlen(out_dir) + 10);
-	strcpy(wigname, out_dir);
-	strcat(wigname, "/");
-	strcat(wigname, tp);
-	strcat(wigname, ".stat");
-	FILE *fp = fopen(wigname, "w");
+	char *statname = malloc(strlen(tp) + strlen(out_dir) + 10);
+	strcpy(statname, out_dir);
+	strcat(statname, "/");
+	strcat(statname, tp);
+	strcat(statname, ".stat");
+	FILE *fp = fopen(statname, "w");
 	if (!fp) return;
 	int i, j;
 	uint32_t *freq = (uint32_t *)calloc(500, sizeof(uint32_t));
@@ -253,7 +253,7 @@ void print_coverage_stat(cov_ary_t *ca, sdict_t* ctgs, char *tp, char *out_dir)
 		fprintf(fp, "%d\t%u\n", i, freq[i]);
 	fclose(fp);	
 	free(freq);
-	free(wigname);	
+	free(statname);	
 }
 
 
@@ -281,12 +281,12 @@ void print_coverage(cov_ary_t *ca, sdict_t* ctgs, char *tp)
 
 void print_maximum_column_cov(cov_ary_t *ca, sdict_t* ctgs, char *tp, uint32_t ws, char *out_dir)
 {
-	char *wigname = malloc(strlen(tp) + strlen(out_dir) + 10);
-	strcpy(wigname, out_dir);
-	strcat(wigname, "/");
-	strcat(wigname, tp);
-	strcat(wigname, ".col");
-	FILE *fp = fopen(wigname, "w");
+	char *colname = malloc(strlen(tp) + strlen(out_dir) + 10);
+	strcpy(colname, out_dir);
+	strcat(colname, "/");
+	strcat(colname, tp);
+	strcat(colname, ".col");
+	FILE *fp = fopen(colname, "w");
 	if (!fp) return;
 	/*fprintf(fp, "track type=\"wiggle_0\" name=\"%s\"\n", tp);	*/
 
@@ -332,6 +332,73 @@ void print_maximum_column_cov(cov_ary_t *ca, sdict_t* ctgs, char *tp, uint32_t w
 				fprintf(fp, "variableStep chrom=%s span=%d\n", ctgs->seq[i].name, lastnbases);
 				fprintf(fp, "%u %u\n", 1, total_coverage[0] /lastnbases);
 			} 
+		}
+	}
+	fclose(fp);	
+	free(colname);	
+}
+void print_coverage_by_wind(cov_ary_t *ca, sdict_t* ctgs, char *tp, uint32_t ws, char *out_dir)
+{
+	char *wigname = malloc(strlen(tp) + strlen(out_dir) + 10);
+	strcpy(wigname, out_dir);
+	strcat(wigname, "/");
+	strcat(wigname, tp);
+	strcat(wigname, ".win.wig");
+	FILE *fp = fopen(wigname, "w");
+	if (!fp) return;
+	/*fprintf(fp, "track type=\"wiggle_0\" name=\"%s\"\n", tp);	*/
+
+	int i, j;
+	uint64_t *total_coverage = NULL;
+	uint32_t n, m;
+	n = m = 0;
+	uint32_t stp = ws >> 1;
+	for ( i = 0; i < ctgs->n_seq; ++i) {
+		if (ca[i].n) {
+			n = 0;
+			uint32_t tot_cov_cnt = (ctgs->seq[i].len + stp -1)/stp - 1;	
+			if (tot_cov_cnt > m) {
+				if (total_coverage) free(total_coverage);
+				total_coverage = calloc(tot_cov_cnt, sizeof(uint64_t));
+				m = tot_cov_cnt;
+			} else memset(total_coverage, 0, sizeof(uint64_t) * tot_cov_cnt);
+			for (j = 0; j < ca[i].n; ++j) {
+				uint32_t s_idx, e_idx;
+				uint32_t s, e;
+				int coverage = ca[i].intv[j].coverage;
+				s = ca[i].intv[j].s - 1;
+				e = ca[i].intv[j].e - 1;
+			
+				s_idx = s / stp;	
+				e_idx = e / stp;
+				if (s_idx == e_idx) {
+					total_coverage[s_idx] += (uint64_t)(e - s + 1) * coverage;
+					if (s_idx) total_coverage[s_idx-1] += (uint64_t)(e - s + 1) * coverage;
+				} else {
+					total_coverage[s_idx] += (uint64_t)((s_idx + 1) * stp - s) * coverage;
+					if (s_idx) total_coverage[s_idx-1] += (uint64_t)((s_idx + 1) * stp - s) * coverage;
+					for (++s_idx; s_idx < e_idx; ++s_idx) {
+						total_coverage[s_idx] += (uint64_t) stp * coverage;
+						total_coverage[s_idx-1] += (uint64_t) stp * coverage;
+					}
+					total_coverage[s_idx-1] += (uint64_t)(e - s_idx * stp + 1)*coverage;	
+					total_coverage[s_idx] += (uint64_t)(e - s_idx * stp + 1)*coverage;	
+				}	
+			}
+			fprintf(fp, ">%s\t%d\t%d\n", ctgs->seq[i].name, ctgs->seq[i].len, ws);
+			uint32_t z;
+			for ( z = 0; z + 2 < tot_cov_cnt; ++z)  fprintf(fp, "%u\t%u\t%.2f\n", z*stp, ws, total_coverage[z]*1.0/ws);
+			if (tot_cov_cnt > 1) {
+				uint32_t s = (tot_cov_cnt - 2) * stp; 
+				uint32_t last_len = ctgs->seq[i].len - s;
+				fprintf(fp, "%u\t%u\t%.2f\n", s, last_len, total_coverage[z]*1.0/last_len);
+				s = (tot_cov_cnt - 1) * stp; 
+				last_len = ctgs->seq[i].len - s;
+				fprintf(fp, "%u\t%u\t%.2f\n", s, last_len, total_coverage[z+1]*1.0/last_len);
+			} else {
+				uint32_t s = (tot_cov_cnt - 1) * stp, last_len = ctgs->seq[i].len - s;
+				fprintf(fp, "%u\t%u\t%.2f\n", s, last_len, total_coverage[z]*1.0/last_len);
+			}
 		}
 	}
 	fclose(fp);	
