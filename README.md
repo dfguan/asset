@@ -107,7 +107,7 @@ fi
 Update soon
 
 ## HiC Processing 
-Given a HiC files list *hiclist* (suppose in fastq.gz format) and the assembly *asm*, use the following command to get Bionano support regions.
+Given a HiC files list *hiclist* (suppose in fastq.gz format) and the assembly *asm*, use the following command to get HiC support regions.
 
 ```
 bin/split_fa $asm > split.fa
